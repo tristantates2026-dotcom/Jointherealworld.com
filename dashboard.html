@@ -1,101 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Top 50 Crypto Dashboard - JoinTheRealWorld</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body { margin:0; font-family: Arial; background:#0d0d0d; color:#fff; }
-    header { display:flex; justify-content:space-between; align-items:center; padding:20px; background:#111; flex-wrap:wrap; }
-    header h2 { margin:0; }
-    header div { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-    header button { padding:8px 16px; border:none; border-radius:6px; background:#00e676; cursor:pointer; font-weight:bold; }
-    #searchBox { padding:8px; border-radius:6px; border:none; }
-    .crypto-container { display:flex; flex-wrap:wrap; justify-content:center; margin-top:20px; max-height:80vh; overflow-y:auto; }
-    .crypto-card { background:#1a1a1a; margin:10px; padding:15px; border-radius:12px; width:220px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.5);}
-    .crypto-card img { width:40px; height:40px; border-radius:50%; margin-bottom:10px; }
-    .green { color:#00e676; }
-    .red { color:#ff4d4d; }
-    canvas { margin-top:10px; }
-    p { margin:4px 0; font-size:14px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JoinTheRealWorld Crypto Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { margin:0; font-family: Arial, sans-serif; background:#0d0d0d; color:#fff; }
+  header { display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#111; flex-wrap:wrap; }
+  header h1 { margin:0; font-size:22px; }
+  header div { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  header button { padding:8px 16px; border:none; border-radius:6px; background:#00e676; cursor:pointer; font-weight:bold; }
+  #searchBox { padding:8px; border-radius:6px; border:none; width:180px; }
+  table { width:100%; border-collapse:collapse; margin-top:15px; }
+  thead { background:#1a1a1a; }
+  th, td { padding:12px; text-align:left; font-size:14px; }
+  th { font-weight:bold; color:#aaa; }
+  tbody tr { border-bottom:1px solid #222; }
+  tbody tr:hover { background:#1e1e1e; }
+  img.coin-logo { width:25px; height:25px; vertical-align:middle; margin-right:8px; }
+  .green { color:#00e676; }
+  .red { color:#ff4d4d; }
+  canvas { width:100px; height:40px; }
+  @media(max-width:800px){
+    table, thead, tbody, th, td, tr { display:block; }
+    th, td { padding:8px; }
+    tbody tr { margin-bottom:10px; }
+  }
+</style>
 </head>
 <body>
 
 <header>
-  <h2>Top 50 Cryptos Live</h2>
+  <h1>JoinTheRealWorld Crypto Dashboard</h1>
   <div>
     <input type="text" id="searchBox" placeholder="Search coin...">
     <button onclick="location.href='login.html'">Logout</button>
   </div>
 </header>
 
-<div id="crypto" class="crypto-container"></div>
+<div style="overflow-x:auto;">
+  <table id="cryptoTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Coin</th>
+        <th>Price</th>
+        <th>24h %</th>
+        <th>Market Cap</th>
+        <th>Volume</th>
+        <th>7d</th>
+      </tr>
+    </thead>
+    <tbody>
+    <!-- Crypto rows go here -->
+    </tbody>
+  </table>
+</div>
 
 <script>
 let charts = {};
-const maxPoints = 30;
 let coinsData = [];
 
-async function fetchCoins() {
+async function fetchCrypto(){
   try {
     const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=true');
     coinsData = await res.json();
-    renderCards(coinsData);
+    renderTable(coinsData);
   } catch(err){
-    console.error('Error fetching coins:', err);
-    document.getElementById('crypto').innerHTML = '<p style="color:red;">Error fetching crypto data. Make sure you are viewing via HTTPS (Vercel recommended).</p>';
+    console.error('Error fetching crypto:', err);
+    document.querySelector('tbody').innerHTML = '<tr><td colspan="7" style="color:red;">Error fetching data. Use HTTPS (Vercel recommended).</td></tr>';
   }
 }
 
-function renderCards(data){
+function renderTable(data){
   const searchText = document.getElementById('searchBox').value.toLowerCase();
   const filtered = data.filter(c => c.name.toLowerCase().includes(searchText) || c.symbol.toLowerCase().includes(searchText));
 
-  let html = '';
-  filtered.forEach(c=>{
-    const changeClass = c.price_change_percentage_24h >=0 ? 'green' : 'red';
-    html += `
-      <div class="crypto-card">
-        <img src="${c.image}" alt="${c.name} logo">
-        <h4>${c.name} (${c.symbol.toUpperCase()})</h4>
-        <p class="${changeClass}">Price: $${c.current_price.toLocaleString()}</p>
-        <p class="${changeClass}">24h: ${c.price_change_percentage_24h.toFixed(2)}%</p>
-        <p>Market Cap: $${c.market_cap.toLocaleString()}</p>
-        <p>Volume: $${c.total_volume.toLocaleString()}</p>
-        <canvas id="chart-${c.id}" height="60"></canvas>
-      </div>
-    `;
-  });
-  document.getElementById('crypto').innerHTML = html;
+  const tbody = document.querySelector('tbody');
+  tbody.innerHTML = '';
 
-  filtered.forEach(c=>{
+  filtered.forEach((c, index)=>{
+    const changeClass = c.price_change_percentage_24h >= 0 ? 'green' : 'red';
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${c.market_cap_rank}</td>
+      <td><img src="${c.image}" class="coin-logo">${c.name} (${c.symbol.toUpperCase()})</td>
+      <td>$${c.current_price.toLocaleString()}</td>
+      <td class="${changeClass}">${c.price_change_percentage_24h.toFixed(2)}%</td>
+      <td>$${c.market_cap.toLocaleString()}</td>
+      <td>$${c.total_volume.toLocaleString()}</td>
+      <td><canvas id="chart-${c.id}"></canvas></td>
+    `;
+    tbody.appendChild(row);
+
+    // Render sparkline
     const ctx = document.getElementById(`chart-${c.id}`).getContext('2d');
     if(!charts[c.id]){
-      charts[c.id] = new Chart(ctx,{
+      charts[c.id] = new Chart(ctx, {
         type:'line',
-        data:{labels:[], datasets:[{data:[], borderColor:'#00e676', borderWidth:2, fill:false}]},
-        options:{responsive:true, plugins:{legend:{display:false}}, scales:{x:{display:false},y:{display:true}}}
+        data:{labels:c.sparkline_in_7d.price.map((_,i)=>i), datasets:[{data:c.sparkline_in_7d.price,borderColor:'#00e676',borderWidth:2,fill:false}]},
+        options:{responsive:true, plugins:{legend:{display:false}}, scales:{x:{display:false},y:{display:false}}}
       });
+    } else {
+      charts[c.id].data.datasets[0].data = c.sparkline_in_7d.price;
+      charts[c.id].update();
     }
-    const chart = charts[c.id];
-    chart.data.labels.push('');
-    chart.data.datasets[0].data.push(c.current_price);
-    if(chart.data.labels.length > maxPoints){
-      chart.data.labels.shift();
-      chart.data.datasets[0].data.shift();
-    }
-    chart.update();
   });
 }
 
-// Search box functionality
-document.getElementById('searchBox').addEventListener('input', ()=>renderCards(coinsData));
+// Search filter
+document.getElementById('searchBox').addEventListener('input', ()=>renderTable(coinsData));
 
-// Initial load
-fetchCoins();
-setInterval(fetchCoins, 1000); // update every second
+// Initial fetch
+fetchCrypto();
+setInterval(fetchCrypto, 5000); // update every 5 seconds
 </script>
 
 </body>
