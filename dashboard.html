@@ -57,19 +57,19 @@
       </tr>
     </thead>
     <tbody>
-      <!-- Crypto rows go here -->
+      <!-- Crypto rows will be inserted here -->
     </tbody>
   </table>
 </div>
 
 <script>
 let charts = {};
-let coinsData = [];
+const coins = ["bitcoin","ethereum","binancecoin","solana","bitcoin-cash"];
 
 async function fetchCrypto(){
   try {
-    const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=true');
-    coinsData = await res.json();
+    const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coins.join(',')}&order=market_cap_desc&sparkline=true`);
+    const coinsData = await res.json();
     renderTable(coinsData);
   } catch(err){
     console.error('Error fetching crypto:', err);
@@ -80,14 +80,12 @@ async function fetchCrypto(){
 function renderTable(data){
   const searchText = document.getElementById('searchBox').value.toLowerCase();
   const filtered = data.filter(c => c.name.toLowerCase().includes(searchText) || c.symbol.toLowerCase().includes(searchText));
-
   const tbody = document.querySelector('tbody');
   tbody.innerHTML = '';
 
   filtered.forEach((c)=>{
     const changeClass = c.price_change_percentage_24h >= 0 ? 'green' : 'red';
     const row = document.createElement('tr');
-
     row.innerHTML = `
       <td data-label="#">${c.market_cap_rank}</td>
       <td data-label="Coin"><img src="${c.image}" class="coin-logo">${c.name} (${c.symbol.toUpperCase()})</td>
@@ -97,7 +95,6 @@ function renderTable(data){
       <td data-label="Volume">$${c.total_volume.toLocaleString()}</td>
       <td data-label="7d"><canvas id="chart-${c.id}"></canvas></td>
     `;
-
     tbody.appendChild(row);
 
     const ctx = document.getElementById(`chart-${c.id}`).getContext('2d');
@@ -115,11 +112,10 @@ function renderTable(data){
 }
 
 // Search filter
-document.getElementById('searchBox').addEventListener('input', ()=>renderTable(coinsData));
+document.getElementById('searchBox').addEventListener('input', ()=>fetchCrypto());
 
-// Initial fetch
 fetchCrypto();
-setInterval(fetchCrypto, 5000); // update every 5 seconds
+setInterval(fetchCrypto, 5000);
 </script>
 
 </body>
