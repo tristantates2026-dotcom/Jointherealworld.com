@@ -7,85 +7,68 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   body { margin:0; font-family:'Roboto', Arial, sans-serif; background:#0d0d0d; color:#fff; }
-
+  
   /* Header */
-  header { display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#111; flex-wrap:wrap; position:sticky; top:0; z-index:1000; box-shadow:0 2px 8px rgba(0,0,0,0.5); }
+  header { display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#111; position:sticky; top:0; z-index:1000; }
   header h1 { margin:0; font-size:24px; color:#00e676; }
-  header div { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-  #searchBox, #transactionSearch { padding:8px 12px; border-radius:6px; border:none; width:200px; background:#1a1a1a; color:#fff; transition:0.3s; }
-  #searchBox:focus, #transactionSearch:focus { outline:none; background:#222; }
-  header button, .actions-container button { padding:8px 16px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.3s; }
-  header button { background:#00e676; }
-  header button:hover { background:#00c853; }
-
+  .menu-container { position:relative; display:flex; align-items:center; gap:10px; }
+  
+  /* Three-dot menu button */
+  .menu-btn { background:none; border:none; color:#fff; font-size:24px; cursor:pointer; }
+  
+  /* Dropdown menu */
+  .dropdown { display:none; position:absolute; right:0; top:40px; background:#1a1a1a; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.5); }
+  .dropdown a { display:block; padding:12px 20px; color:#fff; text-decoration:none; transition:0.2s; }
+  .dropdown a:hover { background:#00e676; color:#000; }
+  
   /* Summary boxes */
   .summary-container { display:flex; flex-wrap:wrap; gap:15px; padding:20px; justify-content:center; }
-  .summary-box { background:#1a1a1a; flex:1 1 180px; min-width:180px; border-radius:10px; padding:20px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.5); transition:0.3s; }
-  .summary-box:hover { background:#222; }
+  .summary-box { background:#1a1a1a; flex:1 1 180px; min-width:180px; border-radius:10px; padding:20px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.5); }
   .summary-box h3 { margin:5px 0; font-size:16px; color:#aaa; }
   .summary-box p { margin:0; font-size:22px; font-weight:bold; color:#00e676; }
 
   /* Table container */
   .table-container { overflow-x:auto; padding:0 20px 20px 20px; }
-  table { width:100%; border-collapse:collapse; margin-top:10px; background:#0d0d0d; border-radius:10px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.5); }
-  thead { background:#1a1a1a; position:sticky; top:0; z-index:100; }
+  table { width:100%; border-collapse:collapse; margin-top:10px; background:#0d0d0d; border-radius:10px; overflow:hidden; }
+  thead { background:#1a1a1a; position:sticky; top:0; }
   th, td { padding:12px; text-align:left; font-size:14px; }
-  th { font-weight:bold; color:#aaa; letter-spacing:0.5px; cursor:pointer; }
-  tbody tr { border-bottom:1px solid #222; transition: background 0.3s; }
+  th { font-weight:bold; color:#aaa; }
   tbody tr:nth-child(even) { background:#141414; }
   tbody tr:hover { background:#1e1e1e; cursor:pointer; transform:scale(1.002); }
 
-  /* Coin logos */
   img.coin-logo { width:28px; height:28px; vertical-align:middle; margin-right:8px; border-radius:50%; }
-
-  /* Price change colors */
   .green { color:#00e676; font-weight:bold; }
   .red { color:#ff4d4d; font-weight:bold; }
 
-  /* Sparkline chart */
   canvas { width:100px !important; height:40px !important; }
 
-  /* Transaction buttons */
-  .actions-container { padding:20px; display:flex; gap:15px; flex-wrap:wrap; }
-  .btn-deposit { background:#00e676; color:#000; }
-  .btn-deposit:hover { background:#00c853; }
-  .btn-withdraw { background:#ff4d4d; color:#fff; }
-  .btn-withdraw:hover { background:#e53935; }
-  .btn-profile { background:#1a73e8; color:#fff; }
-  .btn-profile:hover { background:#1765c1; }
-
-  /* Transaction status */
-  .status-pending { color:#ffcc00; font-weight:bold; }
-  .status-completed { color:#00e676; font-weight:bold; }
-  .status-failed { color:#ff4d4d; font-weight:bold; }
-
-  /* Responsive tables */
   @media(max-width:1000px){
     table, thead, tbody, th, td, tr { display:block; }
     thead tr { display:none; }
     tbody tr { margin-bottom:15px; border-bottom:2px solid #222; }
     td { display:flex; justify-content:space-between; padding:10px 5px; }
     td::before { content:attr(data-label); font-weight:bold; color:#aaa; flex:1; }
-    td span { flex:2; text-align:right; }
     canvas { width:80px !important; height:30px !important; }
   }
-
-  .pagination-container { text-align:center; margin:15px 0; }
-  .pagination-container button { margin:0 5px; background:#00e676; color:#000; }
-  .pagination-container button:hover { background:#00c853; }
 </style>
 </head>
 <body>
 
 <header>
   <h1>JoinTheRealWorld Dashboard</h1>
-  <div>
-    <input type="text" id="searchBox" placeholder="Search coin...">
-    <button onclick="location.href='login.html'">Logout</button>
+  <div class="menu-container">
+    <button class="menu-btn" onclick="toggleMenu()">⋮</button>
+    <div class="dropdown" id="menuDropdown">
+      <a href="#" onclick="alert('Deposit clicked')">Deposit</a>
+      <a href="#" onclick="alert('Withdraw clicked')">Withdraw</a>
+      <a href="profile.html">Profile</a>
+      <a href="#">Settings</a>
+      <a href="#">Live Chat</a>
+    </div>
   </div>
 </header>
 
-<!-- Summary -->
+<!-- Summary boxes -->
 <div class="summary-container">
   <div class="summary-box">
     <h3>Total Market Cap</h3>
@@ -105,7 +88,7 @@
   </div>
 </div>
 
-<!-- Crypto Table -->
+<!-- Table container -->
 <div class="table-container">
   <table id="cryptoTable">
     <thead>
@@ -126,82 +109,59 @@
   </table>
 </div>
 
-<!-- Transactions Section -->
-<div class="table-container">
-  <h2>Transaction History</h2>
-  <input type="text" id="transactionSearch" placeholder="Search transaction...">
-  <table id="transactionsTable">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Date</th>
-        <th>Type</th>
-        <th>Amount</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td>1</td><td>2026-03-17</td><td>Deposit</td><td>$500</td><td class="status-completed">Completed</td></tr>
-      <tr><td>2</td><td>2026-03-16</td><td>Withdrawal</td><td>$200</td><td class="status-pending">Pending</td></tr>
-      <tr><td>3</td><td>2026-03-15</td><td>Deposit</td><td>$300</td><td class="status-failed">Failed</td></tr>
-      <tr><td>4</td><td>2026-03-14</td><td>Deposit</td><td>$400</td><td class="status-completed">Completed</td></tr>
-      <tr><td>5</td><td>2026-03-13</td><td>Withdrawal</td><td>$150</td><td class="status-pending">Pending</td></tr>
-      <tr><td>6</td><td>2026-03-12</td><td>Deposit</td><td>$250</td><td class="status-completed">Completed</td></tr>
-    </tbody>
-  </table>
-  <div class="pagination-container">
-    <button onclick="prevPage()">Prev</button>
-    <span id="pageInfo">Page 1</span>
-    <button onclick="nextPage()">Next</button>
-  </div>
-
-  <!-- Action buttons -->
-  <div class="actions-container">
-    <button class="btn-deposit" onclick="alert('Deposit clicked')">Deposit</button>
-    <button class="btn-withdraw" onclick="alert('Withdraw clicked')">Withdraw</button>
-    <button class="btn-profile" onclick="location.href='profile.html'">Profile</button>
-  </div>
-</div>
-
 <script>
-/* ==== Crypto Table Logic ==== */
 let charts = {};
 const coins = ["bitcoin","ethereum","binancecoin","solana","bitcoin-cash"];
-let cachedData = [];
 
-async function fetchCrypto(){
-  try {
-    const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coins.join(',')}&order=market_cap_desc&sparkline=true&price_change_percentage=1h,24h,7d`);
-    cachedData = await res.json();
+// Dropdown menu
+function toggleMenu(){
+  const menu = document.getElementById('menuDropdown');
+  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+}
 
-    let totalMarketCap = 0, totalVolume = 0;
-    cachedData.forEach(c=>{ totalMarketCap += c.market_cap; totalVolume += c.total_volume; });
-    const btc = cachedData.find(c=>c.id==='bitcoin');
-    const btcDominance = ((btc.market_cap/totalMarketCap)*100).toFixed(2);
-
-    document.getElementById('totalMarketCap').innerText = `$${totalMarketCap.toLocaleString()}`;
-    document.getElementById('totalVolume').innerText = `$${totalVolume.toLocaleString()}`;
-    document.getElementById('btcDominance').innerText = `${btcDominance}%`;
-    document.getElementById('activeCoins').innerText = cachedData.length;
-
-    renderTable(cachedData);
-  } catch(err){
-    console.error(err);
-    document.querySelector('#cryptoTable tbody').innerHTML = '<tr><td colspan="10" style="color:red;">Error fetching data.</td></tr>';
+// Close menu if click outside
+window.onclick = function(e){
+  if(!e.target.matches('.menu-btn')){
+    const menu = document.getElementById('menuDropdown');
+    if(menu.style.display === 'block') menu.style.display = 'none';
   }
 }
 
+// Fetch crypto data
+async function fetchCrypto(){
+  try {
+    const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coins.join(',')}&order=market_cap_desc&sparkline=true&price_change_percentage=1h,24h,7d`);
+    const coinsData = await res.json();
+
+    // Update summary boxes
+    let totalMarketCap=0, totalVolume=0, btcDominance=0;
+    coinsData.forEach(c=>{
+      totalMarketCap += c.market_cap;
+      totalVolume += c.total_volume;
+      if(c.id==="bitcoin") btcDominance=((c.market_cap/totalMarketCap)*100).toFixed(2);
+    });
+    document.getElementById('totalMarketCap').innerText=`$${totalMarketCap.toLocaleString()}`;
+    document.getElementById('totalVolume').innerText=`$${totalVolume.toLocaleString()}`;
+    document.getElementById('btcDominance').innerText=`${btcDominance}%`;
+    document.getElementById('activeCoins').innerText=coinsData.length;
+
+    renderTable(coinsData);
+  } catch(err){
+    console.error(err);
+    document.querySelector('tbody').innerHTML='<tr><td colspan="10" style="color:red;">Error fetching data. Use HTTPS.</td></tr>';
+  }
+}
+
+// Render table
 function renderTable(data){
-  const searchText = document.getElementById('searchBox').value.toLowerCase();
-  const filtered = data.filter(c=>c.name.toLowerCase().includes(searchText) || c.symbol.toLowerCase().includes(searchText));
-  const tbody = document.querySelector('#cryptoTable tbody');
+  const searchText=document.getElementById('searchBox').value.toLowerCase();
+  const filtered=data.filter(c=>c.name.toLowerCase().includes(searchText) || c.symbol.toLowerCase().includes(searchText));
+  const tbody=document.querySelector('tbody');
   tbody.innerHTML='';
-
   filtered.forEach(c=>{
-    const change1h = c.price_change_percentage_1h_in_currency ??0;
-    const change24h = c.price_change_percentage_24h ??0;
-    const change7d = c.price_change_percentage_7d_in_currency ??0;
-
+    const change1h=c.price_change_percentage_1h_in_currency??0;
+    const change24h=c.price_change_percentage_24h??0;
+    const change7d=c.price_change_percentage_7d_in_currency??0;
     const row=document.createElement('tr');
     row.innerHTML=`
       <td data-label="#">${c.market_cap_rank}</td>
@@ -224,37 +184,17 @@ function renderTable(data){
         data:{labels:c.sparkline_in_7d.price.map((_,i)=>i), datasets:[{data:c.sparkline_in_7d.price,borderColor:'#00e676',borderWidth:2,fill:false}]},
         options:{responsive:true, plugins:{legend:{display:false}}, scales:{x:{display:false},y:{display:false}}}
       });
-    } else { charts[c.id].data.datasets[0].data=c.sparkline_in_7d.price; charts[c.id].update(); }
+    }else{
+      charts[c.id].data.datasets[0].data=c.sparkline_in_7d.price;
+      charts[c.id].update();
+    }
   });
 }
 
-document.getElementById('searchBox').addEventListener('input', ()=>renderTable(cachedData));
+document.getElementById('searchBox').addEventListener('input',()=>fetchCrypto());
 fetchCrypto();
 setInterval(fetchCrypto,5000);
-
-/* ==== Transaction Pagination & Search ==== */
-let currentPage=1, rowsPerPage=5;
-const transTable=document.getElementById('transactionsTable');
-
-function showPage(page){
-  const rows=transTable.querySelectorAll('tbody tr');
-  const start=(page-1)*rowsPerPage;
-  const end=start+rowsPerPage;
-  rows.forEach((r,i)=>r.style.display=(i>=start&&i<end)?'':'none');
-  document.getElementById('pageInfo').innerText=`Page ${page}`;
-}
-function prevPage(){ if(currentPage>1) currentPage--; showPage(currentPage);}
-function nextPage(){ if(currentPage*rowsPerPage<transTable.querySelectorAll('tbody tr').length) currentPage++; showPage(currentPage);}
-showPage(currentPage);
-
-document.getElementById('transactionSearch').addEventListener('input',function(){
-  const search=this.value.toLowerCase();
-  const rows=transTable.querySelectorAll('tbody tr');
-  rows.forEach(r=>{
-    const cells=Array.from(r.children).map(td=>td.innerText.toLowerCase());
-    r.style.display=cells.some(c=>c.includes(search))?'':'none';
-  });
-});
 </script>
+
 </body>
 </html>
