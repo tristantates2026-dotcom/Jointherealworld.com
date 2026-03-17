@@ -7,29 +7,29 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   body { margin:0; font-family:'Roboto', Arial, sans-serif; background:#0d0d0d; color:#fff; }
-  
+
   /* Header */
-  header { display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#111; position:sticky; top:0; z-index:1000; }
-  header h1 { margin:0; font-size:24px; color:#00e676; }
+  header { display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#111; position:sticky; top:0; z-index:1000; box-shadow:0 2px 8px rgba(0,0,0,0.5); }
+  .logo-container { display:flex; align-items:center; gap:10px; }
+  .logo-container img { width:40px; height:40px; border-radius:8px; }
+  .logo-container h1 { margin:0; font-size:24px; color:#00e676; }
+
   .menu-container { position:relative; display:flex; align-items:center; gap:10px; }
-  
-  /* Three-dot menu button */
   .menu-btn { background:none; border:none; color:#fff; font-size:24px; cursor:pointer; }
-  
-  /* Dropdown menu */
   .dropdown { display:none; position:absolute; right:0; top:40px; background:#1a1a1a; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.5); }
   .dropdown a { display:block; padding:12px 20px; color:#fff; text-decoration:none; transition:0.2s; }
   .dropdown a:hover { background:#00e676; color:#000; }
-  
+
   /* Summary boxes */
   .summary-container { display:flex; flex-wrap:wrap; gap:15px; padding:20px; justify-content:center; }
-  .summary-box { background:#1a1a1a; flex:1 1 180px; min-width:180px; border-radius:10px; padding:20px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.5); }
+  .summary-box { background:#1a1a1a; flex:1 1 180px; min-width:180px; border-radius:10px; padding:20px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.5); transition:0.3s; }
+  .summary-box:hover { background:#222; }
   .summary-box h3 { margin:5px 0; font-size:16px; color:#aaa; }
   .summary-box p { margin:0; font-size:22px; font-weight:bold; color:#00e676; }
 
   /* Table container */
   .table-container { overflow-x:auto; padding:0 20px 20px 20px; }
-  table { width:100%; border-collapse:collapse; margin-top:10px; background:#0d0d0d; border-radius:10px; overflow:hidden; }
+  table { width:100%; border-collapse:collapse; margin-top:10px; background:#0d0d0d; border-radius:10px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.5); }
   thead { background:#1a1a1a; position:sticky; top:0; }
   th, td { padding:12px; text-align:left; font-size:14px; }
   th { font-weight:bold; color:#aaa; }
@@ -55,7 +55,10 @@
 <body>
 
 <header>
-  <h1>JoinTheRealWorld Dashboard</h1>
+  <div class="logo-container">
+    <img src="https://jointherealworld.com/enroll/logo.png" alt="JoinTheRealWorld Logo">
+    <h1>JoinTheRealWorld Dashboard</h1>
+  </div>
   <div class="menu-container">
     <button class="menu-btn" onclick="toggleMenu()">⋮</button>
     <div class="dropdown" id="menuDropdown">
@@ -119,11 +122,10 @@ function toggleMenu(){
   menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
 }
 
-// Close menu if click outside
 window.onclick = function(e){
   if(!e.target.matches('.menu-btn')){
     const menu = document.getElementById('menuDropdown');
-    if(menu.style.display === 'block') menu.style.display = 'none';
+    if(menu.style.display==='block') menu.style.display='none';
   }
 }
 
@@ -133,11 +135,10 @@ async function fetchCrypto(){
     const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coins.join(',')}&order=market_cap_desc&sparkline=true&price_change_percentage=1h,24h,7d`);
     const coinsData = await res.json();
 
-    // Update summary boxes
     let totalMarketCap=0, totalVolume=0, btcDominance=0;
     coinsData.forEach(c=>{
-      totalMarketCap += c.market_cap;
-      totalVolume += c.total_volume;
+      totalMarketCap+=c.market_cap;
+      totalVolume+=c.total_volume;
       if(c.id==="bitcoin") btcDominance=((c.market_cap/totalMarketCap)*100).toFixed(2);
     });
     document.getElementById('totalMarketCap').innerText=`$${totalMarketCap.toLocaleString()}`;
@@ -154,7 +155,7 @@ async function fetchCrypto(){
 
 // Render table
 function renderTable(data){
-  const searchText=document.getElementById('searchBox').value.toLowerCase();
+  const searchText=document.getElementById('searchBox')?.value.toLowerCase()||'';
   const filtered=data.filter(c=>c.name.toLowerCase().includes(searchText) || c.symbol.toLowerCase().includes(searchText));
   const tbody=document.querySelector('tbody');
   tbody.innerHTML='';
@@ -191,7 +192,6 @@ function renderTable(data){
   });
 }
 
-document.getElementById('searchBox').addEventListener('input',()=>fetchCrypto());
 fetchCrypto();
 setInterval(fetchCrypto,5000);
 </script>
