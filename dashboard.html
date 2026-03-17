@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Top 50 Crypto Dashboard - JoinTheRealWorld</title>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Top 50 Crypto Dashboard - JoinTheRealWorld</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { margin:0; font-family:Arial; background:#0d0d0d; color:#fff; }
+    body { margin:0; font-family: Arial; background:#0d0d0d; color:#fff; }
     header { display:flex; justify-content:space-between; align-items:center; padding:20px; background:#111; flex-wrap:wrap; }
     header h2 { margin:0; }
     header div { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
@@ -44,7 +45,7 @@ async function fetchCoins() {
     renderCards(coinsData);
   } catch(err){
     console.error('Error fetching coins:', err);
-    document.getElementById('crypto').innerHTML = '<p style="color:red;">Error fetching crypto data. Make sure you are using HTTPS (Vercel recommended).</p>';
+    document.getElementById('crypto').innerHTML = '<p style="color:red;">Error fetching crypto data. Make sure you are viewing via HTTPS (Vercel recommended).</p>';
   }
 }
 
@@ -89,7 +90,7 @@ function renderCards(data){
   });
 }
 
-// Search functionality
+// Search box functionality
 document.getElementById('searchBox').addEventListener('input', ()=>renderCards(coinsData));
 
 // Initial load
