@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Dashboard - JoinTheRealWorld</title>
+<title>Crypto Dashboard - JoinTheRealWorld</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -9,96 +9,78 @@ body { margin:0; font-family:Arial; background:#0d0d0d; color:#fff; }
 header { display:flex; justify-content:space-between; align-items:center; padding:20px; background:#111; }
 header h2 { margin:0; }
 header button { padding:8px 16px; border:none; border-radius:6px; background:#00e676; cursor:pointer; font-weight:bold; }
-.container { display:flex; flex-wrap:wrap; justify-content:center; margin-top:20px; }
-.card { background:#1a1a1a; margin:10px; padding:15px; border-radius:10px; width:180px; text-align:center; }
+.crypto-container { display:flex; flex-wrap:wrap; justify-content:center; margin-top:20px; }
+.crypto-card { background:#1a1a1a; margin:10px; padding:15px; border-radius:12px; width:220px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.5); }
+.crypto-card img { width:40px; height:40px; border-radius:50%; margin-bottom:10px; }
+.crypto-card canvas { margin-top:10px; }
 .green { color:#00e676; }
-h3, h4 { margin:5px 0; }
-.testimonials { display:flex; flex-wrap:wrap; justify-content:center; margin:40px 0; }
-.testimonial-card { background:#222; margin:10px; padding:15px; border-radius:10px; width:250px; text-align:center; }
-img { width:70px; border-radius:50%; margin-bottom:10px; }
-.chart-container { max-width:600px; margin:auto; }
+.red { color:#ff4d4d; }
+h3 { text-align:center; margin-top:40px; }
 </style>
 </head>
-
 <body>
 
 <header>
-  <h2>Dashboard</h2>
+  <h2>Crypto Dashboard</h2>
   <button onclick="location.href='login.html'">Logout</button>
 </header>
 
-<h3 style="text-align:center; margin-top:20px;">Top Earners</h3>
-<div class="container">
-  <div class="card"><img src="https://randomuser.me/api/portraits/men/11.jpg"><h4>Daniel M.</h4><p class="green">$1,500/week</p><p>Copywriting</p></div>
-  <div class="card"><img src="https://randomuser.me/api/portraits/women/22.jpg"><h4>Lisa R.</h4><p class="green">$3,200/week</p><p>Ecommerce</p></div>
-  <div class="card"><img src="https://randomuser.me/api/portraits/men/45.jpg"><h4>Chris D.</h4><p class="green">$2,400/week</p><p>SMMA</p></div>
-</div>
-
-<h3 style="text-align:center; margin-top:40px;">Live Crypto Prices & Charts</h3>
-<div id="crypto" class="container"></div>
-
-<div class="chart-container">
-  <canvas id="cryptoChart"></canvas>
-</div>
-
-<h3 style="text-align:center; margin-top:40px;">What People Are Saying</h3>
-<div class="testimonials">
-  <div class="testimonial-card">
-    <img src="https://randomuser.me/api/portraits/men/21.jpg">
-    <p>"I never thought I could make $3,000/week! This platform changed my life."</p>
-    <h4>John P.</h4>
-  </div>
-  <div class="testimonial-card">
-    <img src="https://randomuser.me/api/portraits/women/25.jpg">
-    <p>"The training and guidance are amazing. My store revenue doubled in 2 weeks!"</p>
-    <h4>Sophia L.</h4>
-  </div>
-</div>
+<h3>Top 20 Cryptocurrencies</h3>
+<div id="crypto" class="crypto-container"></div>
 
 <script>
-// Function to load live crypto prices
+const charts = {};
 async function loadCrypto(){
-  let res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false');
-  let data = await res.json();
-  let html='';
-  data.forEach(c=>{
-    html += `<div class="card">
-      <h4>${c.name}</h4>
-      <p class="green">$${c.current_price}</p>
-      <p>24h: ${c.price_change_percentage_24h.toFixed(2)}%</p>
+  // Fetch top 20 coins by market cap
+  const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=true');
+  const data = await res.json();
+
+  let html = '';
+  data.forEach(c => {
+    let changeClass = c.price_change_percentage_24h >= 0 ? 'green' : 'red';
+    html += `<div class="crypto-card">
+      <img src="${c.image}" alt="${c.name} logo">
+      <h4>${c.name} (${c.symbol.toUpperCase()})</h4>
+      <p class="${changeClass}">$${c.current_price.toLocaleString()}</p>
+      <p class="${changeClass}">${c.price_change_percentage_24h.toFixed(2)}%</p>
+      <p>Market Cap: $${c.market_cap.toLocaleString()}</p>
+      <canvas id="sparkline-${c.id}" height="50"></canvas>
     </div>`;
   });
   document.getElementById('crypto').innerHTML = html;
 
-  // Update chart
-  let labels = data.map(c => c.symbol.toUpperCase());
-  let prices = data.map(c => c.current_price);
-  cryptoChart.data.labels = labels;
-  cryptoChart.data.datasets[0].data = prices;
-  cryptoChart.update();
+  // Create or update sparklines for each coin
+  data.forEach(c => {
+    const ctx = document.getElementById(`sparkline-${c.id}`).getContext('2d');
+    if(charts[c.id]){
+      charts[c.id].data.datasets[0].data = c.sparkline_in_7d.price;
+      charts[c.id].update();
+    } else {
+      charts[c.id] = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: c.sparkline_in_7d.price.map((_,i)=>i),
+          datasets: [{
+            data: c.sparkline_in_7d.price,
+            borderColor: c.price_change_percentage_24h >=0 ? '#00e676' : '#ff4d4d',
+            borderWidth: 2,
+            fill: false,
+            tension: 0.3,
+          }]
+        },
+        options: {
+          responsive:true,
+          plugins:{legend:{display:false}},
+          scales:{x:{display:false}, y:{display:false}}
+        }
+      });
+    }
+  });
 }
 
-// Chart.js setup
-let ctx = document.getElementById('cryptoChart').getContext('2d');
-let cryptoChart = new Chart(ctx, {
-  type: 'bar',
-  data: {
-    labels: [],
-    datasets: [{
-      label: 'Crypto Prices (USD)',
-      data: [],
-      backgroundColor: 'rgba(0, 230, 118, 0.7)'
-    }]
-  },
-  options: {
-    responsive: true,
-    scales: { y: { beginAtZero: true } }
-  }
-});
-
-// Refresh every 15 seconds
+// Refresh every 10 seconds
 loadCrypto();
-setInterval(loadCrypto, 15000);
+setInterval(loadCrypto, 10000);
 </script>
 
 </body>
