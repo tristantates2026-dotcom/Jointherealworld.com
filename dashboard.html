@@ -27,53 +27,62 @@
 <div id="crypto" class="crypto-container"></div>
 
 <script>
-const topCoins = ['bitcoin','ethereum','binancecoin','tether','cardano','solana','ripple','polkadot','dogecoin','matic-network']; // Top 10
+const topCoins = [
+  'bitcoin','ethereum','binancecoin','tether','cardano',
+  'solana','ripple','polkadot','dogecoin','matic-network'
+]; // Top 10 coins
+
 const charts = {};
-const maxPoints = 30; // last 30 points
+const maxPoints = 30; // number of points in mini charts
 
 async function fetchCrypto() {
-  const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${topCoins.join(',')}&order=market_cap_desc&per_page=10&page=1&sparkline=false`);
-  const data = await res.json();
-  let html = '';
-  data.forEach(c => {
-    const changeClass = c.price_change_percentage_24h >= 0 ? 'green' : 'red';
-    html += `
-      <div class="crypto-card">
-        <img src="${c.image}" alt="${c.name} logo">
-        <h4>${c.name} (${c.symbol.toUpperCase()})</h4>
-        <p class="${changeClass}">$${c.current_price.toLocaleString()}</p>
-        <p class="${changeClass}">${c.price_change_percentage_24h.toFixed(2)}%</p>
-        <canvas id="chart-${c.id}" height="80"></canvas>
-      </div>
-    `;
-  });
-  document.getElementById('crypto').innerHTML = html;
+  try {
+    const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${topCoins.join(',')}&order=market_cap_desc&per_page=10&page=1&sparkline=false`);
+    const data = await res.json();
 
-  // Update charts
-  data.forEach(c => {
-    const ctx = document.getElementById(`chart-${c.id}`).getContext('2d');
-    if(!charts[c.id]){
-      charts[c.id] = new Chart(ctx, {
-        type:'line',
-        data: { labels:[], datasets:[{data:[], borderColor:'#00e676', borderWidth:2, fill:false}] },
-        options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ x:{display:false}, y:{display:true} } }
-      });
-    }
-    const chart = charts[c.id];
-    chart.data.labels.push('');
-    chart.data.datasets[0].data.push(c.current_price);
-    if(chart.data.labels.length > maxPoints){
-      chart.data.labels.shift();
-      chart.data.datasets[0].data.shift();
-    }
-    chart.update();
-  });
+    let html = '';
+    data.forEach(c => {
+      const changeClass = c.price_change_percentage_24h >= 0 ? 'green' : 'red';
+      html += `
+        <div class="crypto-card">
+          <img src="${c.image}" alt="${c.name} logo">
+          <h4>${c.name} (${c.symbol.toUpperCase()})</h4>
+          <p class="${changeClass}">$${c.current_price.toLocaleString()}</p>
+          <p class="${changeClass}">${c.price_change_percentage_24h.toFixed(2)}%</p>
+          <canvas id="chart-${c.id}" height="80"></canvas>
+        </div>
+      `;
+    });
+    document.getElementById('crypto').innerHTML = html;
+
+    // Update charts
+    data.forEach(c => {
+      const ctx = document.getElementById(`chart-${c.id}`).getContext('2d');
+      if(!charts[c.id]){
+        charts[c.id] = new Chart(ctx, {
+          type:'line',
+          data: { labels:[], datasets:[{data:[], borderColor:'#00e676', borderWidth:2, fill:false}] },
+          options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ x:{display:false}, y:{display:true} } }
+        });
+      }
+      const chart = charts[c.id];
+      chart.data.labels.push('');
+      chart.data.datasets[0].data.push(c.current_price);
+      if(chart.data.labels.length > maxPoints){
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
+      }
+      chart.update();
+    });
+  } catch (err) {
+    console.error('Error fetching crypto data:', err);
+  }
 }
 
 // Initial load
 fetchCrypto();
-// Update every 1 second (1000ms)
-setInterval(fetchCrypto,1000);
+// Update every 1 second
+setInterval(fetchCrypto, 1000);
 </script>
 
 </body>
