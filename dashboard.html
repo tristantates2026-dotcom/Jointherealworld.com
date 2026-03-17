@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Live Crypto Dashboard - JoinTheRealWorld</title>
+  <title>Top Cryptos Dashboard - JoinTheRealWorld</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -9,7 +9,8 @@
     header { display:flex; justify-content:space-between; align-items:center; padding:20px; background:#111; }
     header h2 { margin:0; }
     header button { padding:8px 16px; border:none; border-radius:6px; background:#00e676; cursor:pointer; font-weight:bold; }
-    .crypto-container { display:flex; flex-wrap:wrap; justify-content:center; margin-top:20px; }
+    #searchBox { width: 200px; padding:8px; border-radius:6px; border:none; }
+    .crypto-container { display:flex; flex-wrap:wrap; justify-content:center; margin-top:20px; max-height:80vh; overflow-y:auto; }
     .crypto-card { background:#1a1a1a; margin:10px; padding:15px; border-radius:12px; width:220px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.5);}
     .crypto-card img { width:40px; height:40px; border-radius:50%; margin-bottom:10px; }
     .green { color:#00e676; }
@@ -20,69 +21,77 @@
 <body>
 
 <header>
-  <h2>Top Cryptos Live</h2>
-  <button onclick="location.href='login.html'">Logout</button>
+  <h2>Top 50 Cryptos Live</h2>
+  <div>
+    <input type="text" id="searchBox" placeholder="Search coin...">
+    <button onclick="location.href='login.html'">Logout</button>
+  </div>
 </header>
 
 <div id="crypto" class="crypto-container"></div>
 
 <script>
-const topCoins = [
-  'bitcoin','ethereum','binancecoin','tether','cardano',
-  'solana','ripple','polkadot','dogecoin','matic-network'
-]; // Top 10 coins
+let charts = {};
+const maxPoints = 30; // points in sparkline chart
+let coinsData = [];
 
-const charts = {};
-const maxPoints = 30; // number of points in mini charts
-
-async function fetchCrypto() {
+async function fetchCoins() {
   try {
-    const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${topCoins.join(',')}&order=market_cap_desc&per_page=10&page=1&sparkline=false`);
-    const data = await res.json();
-
-    let html = '';
-    data.forEach(c => {
-      const changeClass = c.price_change_percentage_24h >= 0 ? 'green' : 'red';
-      html += `
-        <div class="crypto-card">
-          <img src="${c.image}" alt="${c.name} logo">
-          <h4>${c.name} (${c.symbol.toUpperCase()})</h4>
-          <p class="${changeClass}">$${c.current_price.toLocaleString()}</p>
-          <p class="${changeClass}">${c.price_change_percentage_24h.toFixed(2)}%</p>
-          <canvas id="chart-${c.id}" height="80"></canvas>
-        </div>
-      `;
-    });
-    document.getElementById('crypto').innerHTML = html;
-
-    // Update charts
-    data.forEach(c => {
-      const ctx = document.getElementById(`chart-${c.id}`).getContext('2d');
-      if(!charts[c.id]){
-        charts[c.id] = new Chart(ctx, {
-          type:'line',
-          data: { labels:[], datasets:[{data:[], borderColor:'#00e676', borderWidth:2, fill:false}] },
-          options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ x:{display:false}, y:{display:true} } }
-        });
-      }
-      const chart = charts[c.id];
-      chart.data.labels.push('');
-      chart.data.datasets[0].data.push(c.current_price);
-      if(chart.data.labels.length > maxPoints){
-        chart.data.labels.shift();
-        chart.data.datasets[0].data.shift();
-      }
-      chart.update();
-    });
-  } catch (err) {
-    console.error('Error fetching crypto data:', err);
+    const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=true');
+    coinsData = await res.json();
+    renderCards(coinsData);
+  } catch(err){
+    console.error('Error fetching coins:', err);
   }
 }
 
+function renderCards(data){
+  const searchText = document.getElementById('searchBox').value.toLowerCase();
+  const filtered = data.filter(c => c.name.toLowerCase().includes(searchText) || c.symbol.toLowerCase().includes(searchText));
+  
+  let html = '';
+  filtered.forEach(c=>{
+    const changeClass = c.price_change_percentage_24h >=0 ? 'green' : 'red';
+    html += `
+      <div class="crypto-card">
+        <img src="${c.image}" alt="${c.name} logo">
+        <h4>${c.name} (${c.symbol.toUpperCase()})</h4>
+        <p class="${changeClass}">Price: $${c.current_price.toLocaleString()}</p>
+        <p class="${changeClass}">24h: ${c.price_change_percentage_24h.toFixed(2)}%</p>
+        <p>Market Cap: $${c.market_cap.toLocaleString()}</p>
+        <p>Volume: $${c.total_volume.toLocaleString()}</p>
+        <canvas id="chart-${c.id}" height="60"></canvas>
+      </div>
+    `;
+  });
+  document.getElementById('crypto').innerHTML = html;
+
+  filtered.forEach(c=>{
+    const ctx = document.getElementById(`chart-${c.id}`).getContext('2d');
+    if(!charts[c.id]){
+      charts[c.id] = new Chart(ctx,{
+        type:'line',
+        data:{labels:[], datasets:[{data:[], borderColor:'#00e676', borderWidth:2, fill:false}]},
+        options:{responsive:true, plugins:{legend:{display:false}}, scales:{x:{display:false},y:{display:true}}}
+      });
+    }
+    const chart = charts[c.id];
+    chart.data.labels.push('');
+    chart.data.datasets[0].data.push(c.current_price);
+    if(chart.data.labels.length > maxPoints){
+      chart.data.labels.shift();
+      chart.data.datasets[0].data.shift();
+    }
+    chart.update();
+  });
+}
+
+// Search functionality
+document.getElementById('searchBox').addEventListener('input', ()=>renderCards(coinsData));
+
 // Initial load
-fetchCrypto();
-// Update every 1 second
-setInterval(fetchCrypto, 1000);
+fetchCoins();
+setInterval(fetchCoins, 1000); // update every second
 </script>
 
 </body>
