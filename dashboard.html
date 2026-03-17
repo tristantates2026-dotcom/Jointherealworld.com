@@ -7,25 +7,29 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   body { margin:0; font-family: Arial, sans-serif; background:#0d0d0d; color:#fff; }
-  header { display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#111; flex-wrap:wrap; }
+  header { display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#111; flex-wrap:wrap; position:sticky; top:0; z-index:1000; }
   header h1 { margin:0; font-size:22px; }
   header div { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   header button { padding:8px 16px; border:none; border-radius:6px; background:#00e676; cursor:pointer; font-weight:bold; }
-  #searchBox { padding:8px; border-radius:6px; border:none; width:180px; }
+  #searchBox { padding:8px; border-radius:6px; border:none; width:180px; background:#1a1a1a; color:#fff; }
   table { width:100%; border-collapse:collapse; margin-top:15px; }
-  thead { background:#1a1a1a; }
+  thead { background:#1a1a1a; position:sticky; top:0; z-index:100; }
   th, td { padding:12px; text-align:left; font-size:14px; }
   th { font-weight:bold; color:#aaa; }
-  tbody tr { border-bottom:1px solid #222; }
-  tbody tr:hover { background:#1e1e1e; }
+  tbody tr { border-bottom:1px solid #222; transition: background 0.2s; }
+  tbody tr:nth-child(even) { background:#141414; }
+  tbody tr:hover { background:#1e1e1e; cursor:pointer; }
   img.coin-logo { width:25px; height:25px; vertical-align:middle; margin-right:8px; }
   .green { color:#00e676; }
   .red { color:#ff4d4d; }
   canvas { width:100px; height:40px; }
-  @media(max-width:800px){
+  @media(max-width:1000px){
     table, thead, tbody, th, td, tr { display:block; }
-    th, td { padding:8px; }
-    tbody tr { margin-bottom:10px; }
+    thead tr { display:none; }
+    tbody tr { margin-bottom:15px; border-bottom:2px solid #222; }
+    td { display:flex; justify-content:space-between; padding:8px; }
+    td::before { content:attr(data-label); font-weight:bold; color:#aaa; }
+    canvas { width:80px; height:30px; }
   }
 </style>
 </head>
@@ -53,7 +57,7 @@
       </tr>
     </thead>
     <tbody>
-    <!-- Crypto rows go here -->
+      <!-- Crypto rows go here -->
     </tbody>
   </table>
 </div>
@@ -80,24 +84,25 @@ function renderTable(data){
   const tbody = document.querySelector('tbody');
   tbody.innerHTML = '';
 
-  filtered.forEach((c, index)=>{
+  filtered.forEach((c)=>{
     const changeClass = c.price_change_percentage_24h >= 0 ? 'green' : 'red';
     const row = document.createElement('tr');
+
     row.innerHTML = `
-      <td>${c.market_cap_rank}</td>
-      <td><img src="${c.image}" class="coin-logo">${c.name} (${c.symbol.toUpperCase()})</td>
-      <td>$${c.current_price.toLocaleString()}</td>
-      <td class="${changeClass}">${c.price_change_percentage_24h.toFixed(2)}%</td>
-      <td>$${c.market_cap.toLocaleString()}</td>
-      <td>$${c.total_volume.toLocaleString()}</td>
-      <td><canvas id="chart-${c.id}"></canvas></td>
+      <td data-label="#">${c.market_cap_rank}</td>
+      <td data-label="Coin"><img src="${c.image}" class="coin-logo">${c.name} (${c.symbol.toUpperCase()})</td>
+      <td data-label="Price">$${c.current_price.toLocaleString()}</td>
+      <td data-label="24h %" class="${changeClass}">${c.price_change_percentage_24h.toFixed(2)}%</td>
+      <td data-label="Market Cap">$${c.market_cap.toLocaleString()}</td>
+      <td data-label="Volume">$${c.total_volume.toLocaleString()}</td>
+      <td data-label="7d"><canvas id="chart-${c.id}"></canvas></td>
     `;
+
     tbody.appendChild(row);
 
-    // Render sparkline
     const ctx = document.getElementById(`chart-${c.id}`).getContext('2d');
     if(!charts[c.id]){
-      charts[c.id] = new Chart(ctx, {
+      charts[c.id] = new Chart(ctx,{
         type:'line',
         data:{labels:c.sparkline_in_7d.price.map((_,i)=>i), datasets:[{data:c.sparkline_in_7d.price,borderColor:'#00e676',borderWidth:2,fill:false}]},
         options:{responsive:true, plugins:{legend:{display:false}}, scales:{x:{display:false},y:{display:false}}}
