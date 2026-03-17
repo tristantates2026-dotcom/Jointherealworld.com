@@ -7,16 +7,17 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   body { margin:0; font-family:'Roboto', Arial, sans-serif; background:#0d0d0d; color:#fff; }
-
+  
   /* Header */
-  header { display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#111; position:sticky; top:0; z-index:1000; box-shadow:0 2px 8px rgba(0,0,0,0.5); }
-  .logo-container { display:flex; align-items:center; gap:10px; }
-  .logo-container img { width:40px; height:40px; border-radius:8px; }
-  .logo-container h1 { margin:0; font-size:24px; color:#00e676; }
+  header { display:flex; justify-content:space-between; align-items:center; padding:15px 25px; background:#111; position:sticky; top:0; z-index:1000; box-shadow:0 2px 8px rgba(0,0,0,0.5); }
+  header h1 { margin:0; font-size:24px; color:#00e676; }
+  header button { padding:8px 16px; border:none; border-radius:6px; background:#00e676; cursor:pointer; font-weight:bold; transition:0.3s; }
+  header button:hover { background:#00c853; }
 
-  .menu-container { position:relative; display:flex; align-items:center; gap:10px; }
+  /* Menu */
+  .menu-container { position:relative; display:inline-block; }
   .menu-btn { background:none; border:none; color:#fff; font-size:24px; cursor:pointer; }
-  .dropdown { display:none; position:absolute; right:0; top:40px; background:#1a1a1a; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.5); }
+  .dropdown { display:none; position:absolute; right:0; top:35px; background:#1a1a1a; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.5); }
   .dropdown a { display:block; padding:12px 20px; color:#fff; text-decoration:none; transition:0.2s; }
   .dropdown a:hover { background:#00e676; color:#000; }
 
@@ -42,6 +43,9 @@
 
   canvas { width:100px !important; height:40px !important; }
 
+  /* Loading animation */
+  .loading { text-align:center; padding:50px; font-size:18px; color:#aaa; }
+
   @media(max-width:1000px){
     table, thead, tbody, th, td, tr { display:block; }
     thead tr { display:none; }
@@ -55,10 +59,7 @@
 <body>
 
 <header>
-  <div class="logo-container">
-    <img src="https://jointherealworld.com/enroll/logo.png" alt="JoinTheRealWorld Logo">
-    <h1>JoinTheRealWorld Dashboard</h1>
-  </div>
+  <h1>JoinTheRealWorld Dashboard</h1>
   <div class="menu-container">
     <button class="menu-btn" onclick="toggleMenu()">⋮</button>
     <div class="dropdown" id="menuDropdown">
@@ -67,6 +68,7 @@
       <a href="profile.html">Profile</a>
       <a href="#">Settings</a>
       <a href="#">Live Chat</a>
+      <a onclick="location.href='login.html'">Logout</a>
     </div>
   </div>
 </header>
@@ -93,7 +95,8 @@
 
 <!-- Table container -->
 <div class="table-container">
-  <table id="cryptoTable">
+  <div class="loading" id="loadingText">Loading crypto data...</div>
+  <table id="cryptoTable" style="display:none;">
     <thead>
       <tr>
         <th>#</th>
@@ -116,48 +119,47 @@
 let charts = {};
 const coins = ["bitcoin","ethereum","binancecoin","solana","bitcoin-cash"];
 
-// Dropdown menu
+// Dropdown
 function toggleMenu(){
   const menu = document.getElementById('menuDropdown');
-  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  menu.style.display = menu.style.display==='block'?'none':'block';
 }
-
-window.onclick = function(e){
+window.onclick=function(e){
   if(!e.target.matches('.menu-btn')){
-    const menu = document.getElementById('menuDropdown');
+    const menu=document.getElementById('menuDropdown');
     if(menu.style.display==='block') menu.style.display='none';
   }
 }
 
-// Fetch crypto data
+// Fetch data
 async function fetchCrypto(){
-  try {
-    const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coins.join(',')}&order=market_cap_desc&sparkline=true&price_change_percentage=1h,24h,7d`);
-    const coinsData = await res.json();
-
-    let totalMarketCap=0, totalVolume=0, btcDominance=0;
-    coinsData.forEach(c=>{
-      totalMarketCap+=c.market_cap;
-      totalVolume+=c.total_volume;
-      if(c.id==="bitcoin") btcDominance=((c.market_cap/totalMarketCap)*100).toFixed(2);
-    });
+  try{
+    const res=await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coins.join(',')}&order=market_cap_desc&sparkline=true&price_change_percentage=1h,24h,7d`);
+    const coinsData=await res.json();
+    
+    // Summary boxes
+    let totalMarketCap=0,totalVolume=0,btcDominance=0;
+    coinsData.forEach(c=>{totalMarketCap+=c.market_cap; totalVolume+=c.total_volume; if(c.id==="bitcoin") btcDominance=((c.market_cap/totalMarketCap)*100).toFixed(2)});
     document.getElementById('totalMarketCap').innerText=`$${totalMarketCap.toLocaleString()}`;
     document.getElementById('totalVolume').innerText=`$${totalVolume.toLocaleString()}`;
     document.getElementById('btcDominance').innerText=`${btcDominance}%`;
     document.getElementById('activeCoins').innerText=coinsData.length;
-
+    
     renderTable(coinsData);
-  } catch(err){
+    document.getElementById('loadingText').style.display='none';
+    document.getElementById('cryptoTable').style.display='table';
+    
+  }catch(err){
     console.error(err);
-    document.querySelector('tbody').innerHTML='<tr><td colspan="10" style="color:red;">Error fetching data. Use HTTPS.</td></tr>';
+    document.getElementById('loadingText').innerText='Error fetching data. Use HTTPS.';
   }
 }
 
 // Render table
 function renderTable(data){
   const searchText=document.getElementById('searchBox')?.value.toLowerCase()||'';
-  const filtered=data.filter(c=>c.name.toLowerCase().includes(searchText) || c.symbol.toLowerCase().includes(searchText));
-  const tbody=document.querySelector('tbody');
+  const filtered=data.filter(c=>c.name.toLowerCase().includes(searchText)||c.symbol.toLowerCase().includes(searchText));
+  const tbody=document.querySelector('#cryptoTable tbody');
   tbody.innerHTML='';
   filtered.forEach(c=>{
     const change1h=c.price_change_percentage_1h_in_currency??0;
@@ -177,7 +179,7 @@ function renderTable(data){
       <td data-label="7d"><canvas id="chart-${c.id}"></canvas></td>
     `;
     tbody.appendChild(row);
-
+    
     const ctx=document.getElementById(`chart-${c.id}`).getContext('2d');
     if(!charts[c.id]){
       charts[c.id]=new Chart(ctx,{
@@ -192,6 +194,7 @@ function renderTable(data){
   });
 }
 
+document.getElementById('searchBox')?.addEventListener('input',()=>fetchCrypto());
 fetchCrypto();
 setInterval(fetchCrypto,5000);
 </script>
