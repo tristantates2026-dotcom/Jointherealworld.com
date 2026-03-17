@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dashboard - JoinTheRealWorld</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { margin:0; font-family:Arial; background:#0d0d0d; color:#fff; }
+header { display:flex; justify-content:space-between; align-items:center; padding:20px; background:#111; }
+header h2 { margin:0; }
+header button { padding:8px 16px; border:none; border-radius:6px; background:#00e676; cursor:pointer; font-weight:bold; }
+.container { display:flex; flex-wrap:wrap; justify-content:center; margin-top:20px; }
+.card { background:#1a1a1a; margin:10px; padding:15px; border-radius:10px; width:180px; text-align:center; }
+.green { color:#00e676; }
+h3, h4 { margin:5px 0; }
+.testimonials { display:flex; flex-wrap:wrap; justify-content:center; margin:40px 0; }
+.testimonial-card { background:#222; margin:10px; padding:15px; border-radius:10px; width:250px; text-align:center; }
+img { width:70px; border-radius:50%; margin-bottom:10px; }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h2>Dashboard</h2>
+  <button onclick="location.href='login.html'">Logout</button>
+</header>
+
+<h3 style="text-align:center; margin-top:20px;">Top Earners</h3>
+<div class="container">
+  <div class="card"><img src="https://randomuser.me/api/portraits/men/11.jpg"><h4>Daniel M.</h4><p class="green">$1,500/week</p><p>Copywriting</p></div>
+  <div class="card"><img src="https://randomuser.me/api/portraits/women/22.jpg"><h4>Lisa R.</h4><p class="green">$3,200/week</p><p>Ecommerce</p></div>
+  <div class="card"><img src="https://randomuser.me/api/portraits/men/45.jpg"><h4>Chris D.</h4><p class="green">$2,400/week</p><p>SMMA</p></div>
+  <div class="card"><img src="https://randomuser.me/api/portraits/women/33.jpg"><h4>Nina K.</h4><p class="green">$900/week</p><p>Freelancing</p></div>
+  <div class="card"><img src="https://randomuser.me/api/portraits/men/65.jpg"><h4>Mike T.</h4><p class="green">$4,500/week</p><p>Dropshipping</p></div>
+</div>
+
+<h3 style="text-align:center; margin-top:40px;">Live Crypto Prices</h3>
+<div id="crypto" class="container"></div>
+
+<canvas id="chart" style="max-width:600px; margin:auto; display:block; margin-top:30px;"></canvas>
+
+<h3 style="text-align:center; margin-top:40px;">What People Are Saying</h3>
+<div class="testimonials">
+  <div class="testimonial-card">
+    <img src="https://randomuser.me/api/portraits/men/21.jpg">
+    <p>"I never thought I could make $3,000/week! This platform changed my life."</p>
+    <h4>John P.</h4>
+  </div>
+  <div class="testimonial-card">
+    <img src="https://randomuser.me/api/portraits/women/25.jpg">
+    <p>"The training and guidance are amazing. My store revenue doubled in 2 weeks!"</p>
+    <h4>Sophia L.</h4>
+  </div>
+  <div class="testimonial-card">
+    <img src="https://randomuser.me/api/portraits/men/33.jpg">
+    <p>"I love the dashboard and live crypto tracking. Everything is transparent."</p>
+    <h4>Owen F.</h4>
+  </div>
+</div>
+
+<script>
+async function loadCrypto(){
+  let res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,binancecoin,cardano');
+  let data = await res.json();
+  let html='';
+  data.forEach(c=>{
+    html += `<div class="card"><h4>${c.name}</h4><p class="green">$${c.current_price}</p></div>`;
+  });
+  document.getElementById('crypto').innerHTML=html;
+}
+loadCrypto();
+
+new Chart(document.getElementById('chart'), {
+  type:'line',
+  data:{
+    labels:['Mon','Tue','Wed','Thu','Fri'],
+    datasets:[{
+      label:'Top Earnings ($)',
+      data:[1500,3200,2400,4100,5000],
+      borderColor:'#00e676',
+      fill:false
+    }]
+  }
+});
+</script>
+
+</body>
+</html>
