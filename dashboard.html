@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Top Cryptos Dashboard - JoinTheRealWorld</title>
+  <title>Top 50 Crypto Dashboard - JoinTheRealWorld</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { margin:0; font-family:Arial; background:#0d0d0d; color:#fff; }
-    header { display:flex; justify-content:space-between; align-items:center; padding:20px; background:#111; }
+    header { display:flex; justify-content:space-between; align-items:center; padding:20px; background:#111; flex-wrap:wrap; }
     header h2 { margin:0; }
+    header div { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
     header button { padding:8px 16px; border:none; border-radius:6px; background:#00e676; cursor:pointer; font-weight:bold; }
-    #searchBox { width: 200px; padding:8px; border-radius:6px; border:none; }
+    #searchBox { padding:8px; border-radius:6px; border:none; }
     .crypto-container { display:flex; flex-wrap:wrap; justify-content:center; margin-top:20px; max-height:80vh; overflow-y:auto; }
     .crypto-card { background:#1a1a1a; margin:10px; padding:15px; border-radius:12px; width:220px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.5);}
     .crypto-card img { width:40px; height:40px; border-radius:50%; margin-bottom:10px; }
     .green { color:#00e676; }
     .red { color:#ff4d4d; }
     canvas { margin-top:10px; }
+    p { margin:4px 0; font-size:14px; }
   </style>
 </head>
 <body>
@@ -32,7 +34,7 @@
 
 <script>
 let charts = {};
-const maxPoints = 30; // points in sparkline chart
+const maxPoints = 30;
 let coinsData = [];
 
 async function fetchCoins() {
@@ -42,13 +44,14 @@ async function fetchCoins() {
     renderCards(coinsData);
   } catch(err){
     console.error('Error fetching coins:', err);
+    document.getElementById('crypto').innerHTML = '<p style="color:red;">Error fetching crypto data. Make sure you are using HTTPS (Vercel recommended).</p>';
   }
 }
 
 function renderCards(data){
   const searchText = document.getElementById('searchBox').value.toLowerCase();
   const filtered = data.filter(c => c.name.toLowerCase().includes(searchText) || c.symbol.toLowerCase().includes(searchText));
-  
+
   let html = '';
   filtered.forEach(c=>{
     const changeClass = c.price_change_percentage_24h >=0 ? 'green' : 'red';
