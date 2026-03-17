@@ -11,8 +11,17 @@
   header h1 { margin:0; font-size:22px; }
   header div { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   header button { padding:8px 16px; border:none; border-radius:6px; background:#00e676; cursor:pointer; font-weight:bold; }
-  #searchBox { padding:8px; border-radius:6px; border:none; width:180px; background:#1a1a1a; color:#fff; }
-  table { width:100%; border-collapse:collapse; margin-top:15px; }
+  #searchBox { padding:8px; border-radius:6px; border:none; width:200px; background:#1a1a1a; color:#fff; }
+
+  /* Summary boxes */
+  .summary-container { display:flex; flex-wrap:wrap; gap:15px; padding:20px; justify-content:center; }
+  .summary-box { background:#1a1a1a; flex:1 1 180px; min-width:180px; border-radius:10px; padding:15px; text-align:center; }
+  .summary-box h3 { margin:5px 0; font-size:18px; color:#aaa; }
+  .summary-box p { margin:0; font-size:20px; font-weight:bold; color:#00e676; }
+
+  /* Table styles */
+  .table-container { overflow-x:auto; padding:0 20px 20px 20px; }
+  table { width:100%; border-collapse:collapse; margin-top:10px; }
   thead { background:#1a1a1a; position:sticky; top:0; z-index:100; }
   th, td { padding:12px; text-align:left; font-size:14px; }
   th { font-weight:bold; color:#aaa; }
@@ -36,23 +45,47 @@
 <body>
 
 <header>
-  <h1>JoinTheRealWorld Crypto Dashboard</h1>
+  <h1>JoinTheRealWorld Dashboard</h1>
   <div>
     <input type="text" id="searchBox" placeholder="Search coin...">
     <button onclick="location.href='login.html'">Logout</button>
   </div>
 </header>
 
-<div style="overflow-x:auto;">
+<!-- Summary boxes -->
+<div class="summary-container">
+  <div class="summary-box">
+    <h3>Total Market Cap</h3>
+    <p id="totalMarketCap">$0</p>
+  </div>
+  <div class="summary-box">
+    <h3>24h Volume</h3>
+    <p id="totalVolume">$0</p>
+  </div>
+  <div class="summary-box">
+    <h3>BTC Dominance</h3>
+    <p id="btcDominance">0%</p>
+  </div>
+  <div class="summary-box">
+    <h3>Active Coins</h3>
+    <p id="activeCoins">0</p>
+  </div>
+</div>
+
+<!-- Table container -->
+<div class="table-container">
   <table id="cryptoTable">
     <thead>
       <tr>
         <th>#</th>
         <th>Coin</th>
         <th>Price</th>
+        <th>1h %</th>
         <th>24h %</th>
+        <th>7d %</th>
         <th>Market Cap</th>
         <th>Volume</th>
+        <th>Circulating Supply</th>
         <th>7d</th>
       </tr>
     </thead>
@@ -64,16 +97,31 @@
 
 <script>
 let charts = {};
-const coins = ["bitcoin","ethereum","binancecoin","solana","bitcoin-cash"];
-
+</script> <script>
+const coins = ["bitcoin","ethereum","binancecoin","solana","bitcoin-cash"]; // Only top coins for now
 async function fetchCrypto(){
   try {
-    const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coins.join(',')}&order=market_cap_desc&sparkline=true`);
+    const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coins.join(',')}&order=market_cap_desc&sparkline=true&price_change_percentage=1h,24h,7d`);
     const coinsData = await res.json();
+
+    // Update summary boxes
+    let totalMarketCap = 0, totalVolume = 0, btcDominance = 0;
+    coinsData.forEach(c => {
+      totalMarketCap += c.market_cap;
+      totalVolume += c.total_volume;
+      if(c.id === "bitcoin") btcDominance = ((c.market_cap / totalMarketCap) * 100).toFixed(2);
+    });
+
+    document.getElementById('totalMarketCap').innerText = `$${totalMarketCap.toLocaleString()}`;
+    document.getElementById('totalVolume').innerText = `$${totalVolume.toLocaleString()}`;
+    document.getElementById('btcDominance').innerText = `${btcDominance}%`;
+    document.getElementById('activeCoins').innerText = coinsData.length;
+
+    // Render table
     renderTable(coinsData);
   } catch(err){
     console.error('Error fetching crypto:', err);
-    document.querySelector('tbody').innerHTML = '<tr><td colspan="7" style="color:red;">Error fetching data. Use HTTPS (Vercel recommended).</td></tr>';
+    document.querySelector('tbody').innerHTML = '<tr><td colspan="10" style="color:red;">Error fetching data. Use HTTPS (Vercel recommended).</td></tr>';
   }
 }
 
@@ -83,20 +131,26 @@ function renderTable(data){
   const tbody = document.querySelector('tbody');
   tbody.innerHTML = '';
 
-  filtered.forEach((c)=>{
-    const changeClass = c.price_change_percentage_24h >= 0 ? 'green' : 'red';
+  filtered.forEach(c => {
+    const change1h = c.price_change_percentage_1h_in_currency ?? 0;
+    const change24h = c.price_change_percentage_24h ?? 0;
+    const change7d = c.price_change_percentage_7d_in_currency ?? 0;
     const row = document.createElement('tr');
     row.innerHTML = `
       <td data-label="#">${c.market_cap_rank}</td>
       <td data-label="Coin"><img src="${c.image}" class="coin-logo">${c.name} (${c.symbol.toUpperCase()})</td>
       <td data-label="Price">$${c.current_price.toLocaleString()}</td>
-      <td data-label="24h %" class="${changeClass}">${c.price_change_percentage_24h.toFixed(2)}%</td>
+      <td data-label="1h %" class="${change1h>=0?'green':'red'}">${change1h.toFixed(2)}%</td>
+      <td data-label="24h %" class="${change24h>=0?'green':'red'}">${change24h.toFixed(2)}%</td>
+      <td data-label="7d %" class="${change7d>=0?'green':'red'}">${change7d.toFixed(2)}%</td>
       <td data-label="Market Cap">$${c.market_cap.toLocaleString()}</td>
       <td data-label="Volume">$${c.total_volume.toLocaleString()}</td>
+      <td data-label="Circulating Supply">${c.circulating_supply.toLocaleString()} ${c.symbol.toUpperCase()}</td>
       <td data-label="7d"><canvas id="chart-${c.id}"></canvas></td>
     `;
     tbody.appendChild(row);
 
+    // Sparkline chart
     const ctx = document.getElementById(`chart-${c.id}`).getContext('2d');
     if(!charts[c.id]){
       charts[c.id] = new Chart(ctx,{
@@ -114,9 +168,56 @@ function renderTable(data){
 // Search filter
 document.getElementById('searchBox').addEventListener('input', ()=>fetchCrypto());
 
+// Initial fetch
 fetchCrypto();
-setInterval(fetchCrypto, 5000);
-</script>
+setInterval(fetchCrypto, 5000); // update every 5 seconds
+</script> <style>
+  body { margin:0; font-family: 'Roboto', Arial, sans-serif; background:#0d0d0d; color:#fff; }
+  
+  /* Header */
+  header { display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#111; flex-wrap:wrap; position:sticky; top:0; z-index:1000; box-shadow:0 2px 8px rgba(0,0,0,0.5); }
+  header h1 { margin:0; font-size:24px; color:#00e676; }
+  header div { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  #searchBox { padding:8px 12px; border-radius:6px; border:none; width:200px; background:#1a1a1a; color:#fff; transition:0.3s; }
+  #searchBox:focus { outline:none; background:#222; }
+  header button { padding:8px 16px; border:none; border-radius:6px; background:#00e676; cursor:pointer; font-weight:bold; transition:0.3s; }
+  header button:hover { background:#00c853; }
 
-</body>
-</html>
+  /* Summary boxes */
+  .summary-container { display:flex; flex-wrap:wrap; gap:15px; padding:20px; justify-content:center; }
+  .summary-box { background:#1a1a1a; flex:1 1 180px; min-width:180px; border-radius:10px; padding:20px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.5); transition:0.3s; }
+  .summary-box:hover { background:#222; }
+  .summary-box h3 { margin:5px 0; font-size:16px; color:#aaa; }
+  .summary-box p { margin:0; font-size:22px; font-weight:bold; color:#00e676; }
+
+  /* Table container */
+  .table-container { overflow-x:auto; padding:0 20px 20px 20px; }
+  table { width:100%; border-collapse:collapse; margin-top:10px; background:#0d0d0d; border-radius:10px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.5); }
+  thead { background:#1a1a1a; position:sticky; top:0; z-index:100; }
+  th, td { padding:12px; text-align:left; font-size:14px; }
+  th { font-weight:bold; color:#aaa; letter-spacing:0.5px; }
+  tbody tr { border-bottom:1px solid #222; transition: background 0.3s; }
+  tbody tr:nth-child(even) { background:#141414; }
+  tbody tr:hover { background:#1e1e1e; cursor:pointer; transform:scale(1.002); }
+
+  /* Coin logos */
+  img.coin-logo { width:28px; height:28px; vertical-align:middle; margin-right:8px; border-radius:50%; }
+
+  /* Price change colors */
+  .green { color:#00e676; font-weight:bold; }
+  .red { color:#ff4d4d; font-weight:bold; }
+
+  /* Sparkline chart */
+  canvas { width:100px !important; height:40px !important; }
+
+  /* Responsive */
+  @media(max-width:1000px){
+    table, thead, tbody, th, td, tr { display:block; }
+    thead tr { display:none; }
+    tbody tr { margin-bottom:15px; border-bottom:2px solid #222; }
+    td { display:flex; justify-content:space-between; padding:10px 5px; }
+    td::before { content:attr(data-label); font-weight:bold; color:#aaa; flex:1; }
+    td span { flex:2; text-align:right; }
+    canvas { width:80px !important; height:30px !important; }
+  }
+</style>
