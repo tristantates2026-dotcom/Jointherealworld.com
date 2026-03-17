@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JoinTheRealWorld Crypto Dashboard</title>
+<title>JoinTheRealWorld Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   body { margin:0; font-family:'Roboto', Arial, sans-serif; background:#0d0d0d; color:#fff; }
@@ -12,9 +12,10 @@
   header { display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#111; flex-wrap:wrap; position:sticky; top:0; z-index:1000; box-shadow:0 2px 8px rgba(0,0,0,0.5); }
   header h1 { margin:0; font-size:24px; color:#00e676; }
   header div { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-  #searchBox { padding:8px 12px; border-radius:6px; border:none; width:200px; background:#1a1a1a; color:#fff; transition:0.3s; }
-  #searchBox:focus { outline:none; background:#222; }
-  header button { padding:8px 16px; border:none; border-radius:6px; background:#00e676; cursor:pointer; font-weight:bold; transition:0.3s; }
+  #searchBox, #transactionSearch { padding:8px 12px; border-radius:6px; border:none; width:200px; background:#1a1a1a; color:#fff; transition:0.3s; }
+  #searchBox:focus, #transactionSearch:focus { outline:none; background:#222; }
+  header button, .actions-container button { padding:8px 16px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.3s; }
+  header button { background:#00e676; }
   header button:hover { background:#00c853; }
 
   /* Summary boxes */
@@ -44,7 +45,21 @@
   /* Sparkline chart */
   canvas { width:100px !important; height:40px !important; }
 
-  /* Responsive */
+  /* Transaction buttons */
+  .actions-container { padding:20px; display:flex; gap:15px; flex-wrap:wrap; }
+  .btn-deposit { background:#00e676; color:#000; }
+  .btn-deposit:hover { background:#00c853; }
+  .btn-withdraw { background:#ff4d4d; color:#fff; }
+  .btn-withdraw:hover { background:#e53935; }
+  .btn-profile { background:#1a73e8; color:#fff; }
+  .btn-profile:hover { background:#1765c1; }
+
+  /* Transaction status */
+  .status-pending { color:#ffcc00; font-weight:bold; }
+  .status-completed { color:#00e676; font-weight:bold; }
+  .status-failed { color:#ff4d4d; font-weight:bold; }
+
+  /* Responsive tables */
   @media(max-width:1000px){
     table, thead, tbody, th, td, tr { display:block; }
     thead tr { display:none; }
@@ -54,6 +69,10 @@
     td span { flex:2; text-align:right; }
     canvas { width:80px !important; height:30px !important; }
   }
+
+  .pagination-container { text-align:center; margin:15px 0; }
+  .pagination-container button { margin:0 5px; background:#00e676; color:#000; }
+  .pagination-container button:hover { background:#00c853; }
 </style>
 </head>
 <body>
@@ -66,7 +85,7 @@
   </div>
 </header>
 
-<!-- Summary boxes -->
+<!-- Summary -->
 <div class="summary-container">
   <div class="summary-box">
     <h3>Total Market Cap</h3>
@@ -86,7 +105,7 @@
   </div>
 </div>
 
-<!-- Table container -->
+<!-- Crypto Table -->
 <div class="table-container">
   <table id="cryptoTable">
     <thead>
@@ -107,7 +126,45 @@
   </table>
 </div>
 
+<!-- Transactions Section -->
+<div class="table-container">
+  <h2>Transaction History</h2>
+  <input type="text" id="transactionSearch" placeholder="Search transaction...">
+  <table id="transactionsTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Amount</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>2026-03-17</td><td>Deposit</td><td>$500</td><td class="status-completed">Completed</td></tr>
+      <tr><td>2</td><td>2026-03-16</td><td>Withdrawal</td><td>$200</td><td class="status-pending">Pending</td></tr>
+      <tr><td>3</td><td>2026-03-15</td><td>Deposit</td><td>$300</td><td class="status-failed">Failed</td></tr>
+      <tr><td>4</td><td>2026-03-14</td><td>Deposit</td><td>$400</td><td class="status-completed">Completed</td></tr>
+      <tr><td>5</td><td>2026-03-13</td><td>Withdrawal</td><td>$150</td><td class="status-pending">Pending</td></tr>
+      <tr><td>6</td><td>2026-03-12</td><td>Deposit</td><td>$250</td><td class="status-completed">Completed</td></tr>
+    </tbody>
+  </table>
+  <div class="pagination-container">
+    <button onclick="prevPage()">Prev</button>
+    <span id="pageInfo">Page 1</span>
+    <button onclick="nextPage()">Next</button>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="actions-container">
+    <button class="btn-deposit" onclick="alert('Deposit clicked')">Deposit</button>
+    <button class="btn-withdraw" onclick="alert('Withdraw clicked')">Withdraw</button>
+    <button class="btn-profile" onclick="location.href='profile.html'">Profile</button>
+  </div>
+</div>
+
 <script>
+/* ==== Crypto Table Logic ==== */
 let charts = {};
 const coins = ["bitcoin","ethereum","binancecoin","solana","bitcoin-cash"];
 let cachedData = [];
@@ -117,11 +174,10 @@ async function fetchCrypto(){
     const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coins.join(',')}&order=market_cap_desc&sparkline=true&price_change_percentage=1h,24h,7d`);
     cachedData = await res.json();
 
-    // Summary boxes
     let totalMarketCap = 0, totalVolume = 0;
-    cachedData.forEach(c => { totalMarketCap += c.market_cap; totalVolume += c.total_volume; });
-    const btc = cachedData.find(c => c.id === "bitcoin");
-    const btcDominance = ((btc.market_cap / totalMarketCap) * 100).toFixed(2);
+    cachedData.forEach(c=>{ totalMarketCap += c.market_cap; totalVolume += c.total_volume; });
+    const btc = cachedData.find(c=>c.id==='bitcoin');
+    const btcDominance = ((btc.market_cap/totalMarketCap)*100).toFixed(2);
 
     document.getElementById('totalMarketCap').innerText = `$${totalMarketCap.toLocaleString()}`;
     document.getElementById('totalVolume').innerText = `$${totalVolume.toLocaleString()}`;
@@ -130,24 +186,24 @@ async function fetchCrypto(){
 
     renderTable(cachedData);
   } catch(err){
-    console.error('Error fetching crypto:', err);
-    document.querySelector('#cryptoTable tbody').innerHTML = '<tr><td colspan="10" style="color:red;">Error fetching data. Use HTTPS (Vercel recommended).</td></tr>';
+    console.error(err);
+    document.querySelector('#cryptoTable tbody').innerHTML = '<tr><td colspan="10" style="color:red;">Error fetching data.</td></tr>';
   }
 }
 
 function renderTable(data){
   const searchText = document.getElementById('searchBox').value.toLowerCase();
-  const filtered = data.filter(c => c.name.toLowerCase().includes(searchText) || c.symbol.toLowerCase().includes(searchText));
+  const filtered = data.filter(c=>c.name.toLowerCase().includes(searchText) || c.symbol.toLowerCase().includes(searchText));
   const tbody = document.querySelector('#cryptoTable tbody');
-  tbody.innerHTML = '';
+  tbody.innerHTML='';
 
-  filtered.forEach(c => {
-    const change1h = c.price_change_percentage_1h_in_currency ?? 0;
-    const change24h = c.price_change_percentage_24h ?? 0;
-    const change7d = c.price_change_percentage_7d_in_currency ?? 0;
+  filtered.forEach(c=>{
+    const change1h = c.price_change_percentage_1h_in_currency ??0;
+    const change24h = c.price_change_percentage_24h ??0;
+    const change7d = c.price_change_percentage_7d_in_currency ??0;
 
-    const row = document.createElement('tr');
-    row.innerHTML = `
+    const row=document.createElement('tr');
+    row.innerHTML=`
       <td data-label="#">${c.market_cap_rank}</td>
       <td data-label="Coin"><img src="${c.image}" class="coin-logo">${c.name} (${c.symbol.toUpperCase()})</td>
       <td data-label="Price">$${c.current_price.toLocaleString()}</td>
@@ -161,67 +217,44 @@ function renderTable(data){
     `;
     tbody.appendChild(row);
 
-    // Chart.js sparkline
-    const ctx = document.getElementById(`chart-${c.id}`).getContext('2d');
+    const ctx=document.getElementById(`chart-${c.id}`).getContext('2d');
     if(!charts[c.id]){
-      charts[c.id] = new Chart(ctx, {
+      charts[c.id]=new Chart(ctx,{
         type:'line',
         data:{labels:c.sparkline_in_7d.price.map((_,i)=>i), datasets:[{data:c.sparkline_in_7d.price,borderColor:'#00e676',borderWidth:2,fill:false}]},
         options:{responsive:true, plugins:{legend:{display:false}}, scales:{x:{display:false},y:{display:false}}}
       });
-    } else {
-      charts[c.id].data.datasets[0].data = c.sparkline_in_7d.price;
-      charts[c.id].update();
-    }
+    } else { charts[c.id].data.datasets[0].data=c.sparkline_in_7d.price; charts[c.id].update(); }
   });
 }
 
-// Search filter
 document.getElementById('searchBox').addEventListener('input', ()=>renderTable(cachedData));
-
-// Sorting
-const table = document.getElementById('cryptoTable');
-const headers = table.querySelectorAll('th');
-let sortDirection = Array(headers.length).fill(null);
-headers.forEach((header,index)=>{
-  header.addEventListener('click',()=>{
-    const tbody = table.querySelector('tbody');
-    const rowsArray = Array.from(tbody.querySelectorAll('tr'));
-    const direction = sortDirection[index]==='asc'?'desc':'asc';
-    sortDirection.fill(null); sortDirection[index]=direction;
-
-    rowsArray.sort((a,b)=>{
-      const parse = val => parseFloat(val.replace(/[^0-9.-]+/g,''))||0;
-      const aVal = a.children[index].innerText;
-      const bVal = b.children[index].innerText;
-      return direction==='asc'?parse(aVal)-parse(bVal):parse(bVal)-parse(aVal);
-    });
-    rowsArray.forEach(r=>tbody.appendChild(r));
-  });
-});
-
-// Tooltips & gradient charts
-function addTooltips(){
-  document.querySelectorAll('td[data-label="Coin"]').forEach(cell=>cell.title=cell.innerText);
-}
-function enhanceCharts(){
-  Object.values(charts).forEach(chart=>{
-    const ctx = chart.ctx;
-    const gradient = ctx.createLinearGradient(0,0,0,40);
-    gradient.addColorStop(0,'rgba(0,230,118,0.4)');
-    gradient.addColorStop(1,'rgba(0,230,118,0)');
-    chart.data.datasets[0].backgroundColor = gradient;
-    chart.options.elements.line.tension=0.25;
-    chart.update();
-  });
-}
-setInterval(()=>{ addTooltips(); enhanceCharts(); },6000);
-setTimeout(enhanceCharts,1000);
-
-// Initial fetch
 fetchCrypto();
 setInterval(fetchCrypto,5000);
 
+/* ==== Transaction Pagination & Search ==== */
+let currentPage=1, rowsPerPage=5;
+const transTable=document.getElementById('transactionsTable');
+
+function showPage(page){
+  const rows=transTable.querySelectorAll('tbody tr');
+  const start=(page-1)*rowsPerPage;
+  const end=start+rowsPerPage;
+  rows.forEach((r,i)=>r.style.display=(i>=start&&i<end)?'':'none');
+  document.getElementById('pageInfo').innerText=`Page ${page}`;
+}
+function prevPage(){ if(currentPage>1) currentPage--; showPage(currentPage);}
+function nextPage(){ if(currentPage*rowsPerPage<transTable.querySelectorAll('tbody tr').length) currentPage++; showPage(currentPage);}
+showPage(currentPage);
+
+document.getElementById('transactionSearch').addEventListener('input',function(){
+  const search=this.value.toLowerCase();
+  const rows=transTable.querySelectorAll('tbody tr');
+  rows.forEach(r=>{
+    const cells=Array.from(r.children).map(td=>td.innerText.toLowerCase());
+    r.style.display=cells.some(c=>c.includes(search))?'':'none';
+  });
+});
 </script>
 </body>
 </html>
