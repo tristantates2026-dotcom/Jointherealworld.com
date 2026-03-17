@@ -1,86 +1,34 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>JoinTheRealWorld - Enroll</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-body { margin:0; font-family:Arial; background:#0d0d0d; color:#fff; }
-header { padding:20px; text-align:center; background:#111; font-size:24px; font-weight:bold; }
-
-.hero { text-align:center; padding:50px 20px; }
-button { padding:12px 20px; border:none; border-radius:8px; font-weight:bold; margin:10px; background:#00e676; }
-
-.container { display:flex; flex-wrap:wrap; justify-content:center; }
-.card { background:#1a1a1a; margin:10px; padding:15px; border-radius:10px; width:200px; text-align:center; }
-
-img { width:70px; border-radius:50%; }
-.green { color:#00e676; }
-
-input { width:80%; padding:10px; margin:5px; border-radius:5px; border:none; }
-.form { text-align:center; margin-top:30px; }
-</style>
-</head>
-
-<body>
-
-<header>JoinTheRealWorld 🚀</header>
-
-<div class="hero">
-  <h1>Start Your Journey</h1>
-  <p>Real people making real money every week</p>
-</div>
-
-<!-- SIGN UP FORM -->
-<div class="form">
-  <h2>Enroll Now</h2>
-  <input placeholder="Email"><br>
-  <input placeholder="Password" type="password"><br>
-  <button onclick="alert('Account Created!')">Join Now</button>
-</div>
-
-<!-- EARNERS -->
-<h2 style="text-align:center;">Top Earners</h2>
-
-<div class="container">
-  <div class="card">
-    <img src="https://randomuser.me/api/portraits/men/11.jpg">
-    <h4>Daniel</h4>
-    <p class="green">$1500/week</p>
-  </div>
-
-  <div class="card">
-    <img src="https://randomuser.me/api/portraits/women/22.jpg">
-    <h4>Lisa</h4>
-    <p class="green">$3200/week</p>
-  </div>
-</div>
-
-<!-- CRYPTO -->
-<h2 style="text-align:center;">Live Crypto</h2>
-<div id="crypto" class="container"></div>
-
-<canvas id="chart" style="max-width:600px; margin:auto;"></canvas>
-
 <script>
-async function loadCrypto(){
-let res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum');
-let data = await res.json();
-let html='';
-data.forEach(c=>{
-html += `<div class="card"><h4>${c.name}</h4><p>$${c.current_price}</p></div>`;
-});
-document.getElementById('crypto').innerHTML=html;
+const cryptoContainer = document.getElementById('crypto');
+
+// Function to fetch crypto data
+async function loadCrypto() {
+  try {
+    let res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false');
+    let data = await res.json();
+    let html = '';
+    data.forEach(c => {
+      html += `
+        <div class="card">
+          <img src="${c.image}" alt="${c.name}">
+          <h4>${c.name}</h4>
+          <p class="green">$${c.current_price.toLocaleString()}</p>
+          <p style="color:${c.price_change_percentage_24h >= 0 ? '#00e676' : '#ff3d00'}">
+            ${c.price_change_percentage_24h.toFixed(2)}% (24h)
+          </p>
+        </div>
+      `;
+    });
+    cryptoContainer.innerHTML = html;
+  } catch (err) {
+    cryptoContainer.innerHTML = '<p style="color:red;">Error loading crypto data</p>';
+    console.error(err);
+  }
 }
+
+// Load initially
 loadCrypto();
 
-new Chart(document.getElementById('chart'), {
-type:'line',
-data:{labels:['Mon','Tue','Wed','Thu','Fri'],datasets:[{data:[10,20,15,30,25]}]}
-});
+// Update every 30 seconds
+setInterval(loadCrypto, 30000);
 </script>
-
-</body>
-</html>
