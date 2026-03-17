@@ -29,7 +29,7 @@
   table { width:100%; border-collapse:collapse; margin-top:10px; background:#0d0d0d; border-radius:10px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.5); }
   thead { background:#1a1a1a; position:sticky; top:0; z-index:100; }
   th, td { padding:12px; text-align:left; font-size:14px; }
-  th { font-weight:bold; color:#aaa; letter-spacing:0.5px; }
+  th { font-weight:bold; color:#aaa; letter-spacing:0.5px; cursor:pointer; }
   tbody tr { border-bottom:1px solid #222; transition: background 0.3s; }
   tbody tr:nth-child(even) { background:#141414; }
   tbody tr:hover { background:#1e1e1e; cursor:pointer; transform:scale(1.002); }
@@ -57,6 +57,7 @@
 </style>
 </head>
 <body>
+
 <header>
   <h1>JoinTheRealWorld Dashboard</h1>
   <div>
@@ -109,35 +110,35 @@
 <script>
 let charts = {};
 const coins = ["bitcoin","ethereum","binancecoin","solana","bitcoin-cash"];
+let cachedData = [];
 
 async function fetchCrypto(){
   try {
     const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coins.join(',')}&order=market_cap_desc&sparkline=true&price_change_percentage=1h,24h,7d`);
-    const coinsData = await res.json();
+    cachedData = await res.json();
 
     // Summary boxes
-    let totalMarketCap = 0, totalVolume = 0, btcDominance = 0;
-    coinsData.forEach(c => {
-      totalMarketCap += c.market_cap;
-      totalVolume += c.total_volume;
-      if(c.id === "bitcoin") btcDominance = ((c.market_cap / totalMarketCap) * 100).toFixed(2);
-    });
+    let totalMarketCap = 0, totalVolume = 0;
+    cachedData.forEach(c => { totalMarketCap += c.market_cap; totalVolume += c.total_volume; });
+    const btc = cachedData.find(c => c.id === "bitcoin");
+    const btcDominance = ((btc.market_cap / totalMarketCap) * 100).toFixed(2);
+
     document.getElementById('totalMarketCap').innerText = `$${totalMarketCap.toLocaleString()}`;
     document.getElementById('totalVolume').innerText = `$${totalVolume.toLocaleString()}`;
     document.getElementById('btcDominance').innerText = `${btcDominance}%`;
-    document.getElementById('activeCoins').innerText = coinsData.length;
+    document.getElementById('activeCoins').innerText = cachedData.length;
 
-    renderTable(coinsData);
+    renderTable(cachedData);
   } catch(err){
     console.error('Error fetching crypto:', err);
-    document.querySelector('tbody').innerHTML = '<tr><td colspan="10" style="color:red;">Error fetching data. Use HTTPS (Vercel recommended).</td></tr>';
+    document.querySelector('#cryptoTable tbody').innerHTML = '<tr><td colspan="10" style="color:red;">Error fetching data. Use HTTPS (Vercel recommended).</td></tr>';
   }
 }
 
 function renderTable(data){
   const searchText = document.getElementById('searchBox').value.toLowerCase();
   const filtered = data.filter(c => c.name.toLowerCase().includes(searchText) || c.symbol.toLowerCase().includes(searchText));
-  const tbody = document.querySelector('tbody');
+  const tbody = document.querySelector('#cryptoTable tbody');
   tbody.innerHTML = '';
 
   filtered.forEach(c => {
@@ -160,6 +161,7 @@ function renderTable(data){
     `;
     tbody.appendChild(row);
 
+    // Chart.js sparkline
     const ctx = document.getElementById(`chart-${c.id}`).getContext('2d');
     if(!charts[c.id]){
       charts[c.id] = new Chart(ctx, {
@@ -174,32 +176,31 @@ function renderTable(data){
   });
 }
 
-document.getElementById('searchBox').addEventListener('input', ()=>fetchCrypto());
-fetchCrypto();
-setInterval(fetchCrypto,5000);
+// Search filter
+document.getElementById('searchBox').addEventListener('input', ()=>renderTable(cachedData));
 
 // Sorting
 const table = document.getElementById('cryptoTable');
 const headers = table.querySelectorAll('th');
 let sortDirection = Array(headers.length).fill(null);
 headers.forEach((header,index)=>{
-  header.style.cursor='pointer';
   header.addEventListener('click',()=>{
     const tbody = table.querySelector('tbody');
     const rowsArray = Array.from(tbody.querySelectorAll('tr'));
-    const direction = sortDirection[index] === 'asc' ? 'desc' : 'asc';
-    sortDirection.fill(null);
-    sortDirection[index] = direction;
+    const direction = sortDirection[index]==='asc'?'desc':'asc';
+    sortDirection.fill(null); sortDirection[index]=direction;
+
     rowsArray.sort((a,b)=>{
-      const aVal = a.children[index].innerText.replace(/[$,%]/g,'');
-      const bVal = b.children[index].innerText.replace(/[$,%]/g,'');
-      return direction==='asc'?aVal-bVal:bVal-aVal;
+      const parse = val => parseFloat(val.replace(/[^0-9.-]+/g,''))||0;
+      const aVal = a.children[index].innerText;
+      const bVal = b.children[index].innerText;
+      return direction==='asc'?parse(aVal)-parse(bVal):parse(bVal)-parse(aVal);
     });
     rowsArray.forEach(r=>tbody.appendChild(r));
   });
 });
 
-// Tooltips and chart enhancements
+// Tooltips & gradient charts
 function addTooltips(){
   document.querySelectorAll('td[data-label="Coin"]').forEach(cell=>cell.title=cell.innerText);
 }
@@ -210,12 +211,17 @@ function enhanceCharts(){
     gradient.addColorStop(0,'rgba(0,230,118,0.4)');
     gradient.addColorStop(1,'rgba(0,230,118,0)');
     chart.data.datasets[0].backgroundColor = gradient;
-    chart.options.elements.line.tension = 0.25;
+    chart.options.elements.line.tension=0.25;
     chart.update();
   });
 }
 setInterval(()=>{ addTooltips(); enhanceCharts(); },6000);
 setTimeout(enhanceCharts,1000);
+
+// Initial fetch
+fetchCrypto();
+setInterval(fetchCrypto,5000);
+
 </script>
 </body>
 </html>

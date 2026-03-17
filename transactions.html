@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Transactions</title>
+
+  <style>
+    body { background:#0d0d0d; color:#fff; font-family:Arial; }
+
+    /* Buttons */
+    .actions-container {
+      padding:20px;
+      display:flex;
+      gap:15px;
+      flex-wrap:wrap;
+    }
+
+    .actions-container button {
+      padding:10px 20px;
+      border:none;
+      border-radius:6px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    .btn-deposit { background:#00e676; color:#000; }
+    .btn-withdraw { background:#ff4d4d; color:#fff; }
+    .btn-profile { background:#1a73e8; color:#fff; }
+
+    /* Table */
+    .table-container { padding:20px; }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    th, td {
+      padding:12px;
+      text-align:left;
+    }
+
+    th { color:#aaa; }
+
+    #transactionsTable tbody tr {
+      border-bottom:1px solid #222;
+    }
+
+    #transactionsTable tbody tr:nth-child(even) {
+      background:#141414;
+    }
+
+    #transactionsTable tbody tr:hover {
+      background:#1e1e1e;
+      transform:scale(1.002);
+    }
+
+    /* Status colors */
+    .status-completed { color:#00e676; }
+    .status-pending { color:#ffcc00; }
+    .status-failed { color:#ff4d4d; }
+
+  </style>
+</head>
+
+<body>
+
+<!-- ACTIONS (OUTSIDE TABLE) -->
+<div class="actions-container">
+  <input type="text" id="transactionSearch" placeholder="Search..." style="padding:8px;">
+  <button class="btn-deposit">Deposit</button>
+  <button class="btn-withdraw">Withdraw</button>
+  <button class="btn-profile">Profile</button>
+</div>
+
+<!-- TABLE -->
+<div class="table-container">
+  <h2>Transaction History</h2>
+
+  <table id="transactionsTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Amount</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>2026-03-17</td>
+        <td>Deposit</td>
+        <td>$500</td>
+        <td class="status-completed">Completed</td>
+      </tr>
+
+      <tr>
+        <td>2</td>
+        <td>2026-03-16</td>
+        <td>Withdrawal</td>
+        <td>$200</td>
+        <td class="status-pending">Pending</td>
+      </tr>
+
+      <tr>
+        <td>3</td>
+        <td>2026-03-15</td>
+        <td>Deposit</td>
+        <td>$300</td>
+        <td class="status-failed">Failed</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- PAGINATION -->
+<div style="text-align:center; margin:20px;">
+  <button onclick="prevPage()">Prev</button>
+  <span id="pageInfo">Page 1</span>
+  <button onclick="nextPage()">Next</button>
+</div>
+
+<!-- ✅ ALL SCRIPTS GO HERE -->
+<script>
+let currentPage = 1;
+const rowsPerPage = 2;
+
+function showPage(page) {
+  const rows = document.querySelectorAll('#transactionsTable tbody tr');
+  const start = (page-1)*rowsPerPage;
+  const end = start + rowsPerPage;
+
+  rows.forEach((row,i)=>{
+    row.style.display = (i>=start && i<end) ? '' : 'none';
+  });
+
+  document.getElementById('pageInfo').innerText = "Page " + page;
+}
+
+function prevPage(){
+  if(currentPage>1){ currentPage--; showPage(currentPage); }
+}
+
+function nextPage(){
+  const rows = document.querySelectorAll('#transactionsTable tbody tr');
+  if(currentPage*rowsPerPage < rows.length){
+    currentPage++;
+    showPage(currentPage);
+  }
+}
+
+showPage(currentPage);
+
+// SEARCH
+document.getElementById('transactionSearch').addEventListener('input', function(){
+  const val = this.value.toLowerCase();
+  const rows = document.querySelectorAll('#transactionsTable tbody tr');
+
+  rows.forEach(row=>{
+    row.style.display = row.innerText.toLowerCase().includes(val) ? '' : 'none';
+  });
+});
+</script>
+
+</body>
+</html>
