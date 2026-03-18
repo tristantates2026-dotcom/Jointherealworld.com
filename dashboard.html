@@ -6,60 +6,156 @@
 <title>JoinTheRealWorld Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  body { margin:0; font-family:'Roboto', Arial, sans-serif; background:#0d0d0d; color:#fff; }
-  
-  /* Header */
-  header { display:flex; justify-content:space-between; align-items:center; padding:15px 25px; background:#111; position:sticky; top:0; z-index:1000; box-shadow:0 2px 8px rgba(0,0,0,0.5); }
-  header h1 { margin:0; font-size:24px; color:#00e676; }
-  header button { padding:8px 16px; border:none; border-radius:6px; background:#00e676; cursor:pointer; font-weight:bold; transition:0.3s; }
-  header button:hover { background:#00c853; }
+/* Body & font */
+body {
+  margin:0;
+  font-family:'Roboto', Arial, sans-serif;
+  background:#0f0f12;
+  color:#fff;
+}
 
-  /* Menu */
-  .menu-container { position:relative; display:inline-block; }
-  .menu-btn { background:none; border:none; color:#fff; font-size:24px; cursor:pointer; }
-  .dropdown { display:none; position:absolute; right:0; top:35px; background:#1a1a1a; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.5); }
-  .dropdown a { display:block; padding:12px 20px; color:#fff; text-decoration:none; transition:0.2s; }
-  .dropdown a:hover { background:#00e676; color:#000; }
+/* Header */
+header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 30px;
+  background:#121217;
+  position:sticky;
+  top:0;
+  z-index:1000;
+  box-shadow:0 2px 8px rgba(0,0,0,0.5);
+}
+header h1 {
+  margin:0;
+  font-size:26px;
+  color:#00ffa3;
+  letter-spacing:1px;
+}
+header .menu-container {
+  position:relative;
+  display:inline-block;
+}
+.menu-btn {
+  background:none;
+  border:none;
+  color:#fff;
+  font-size:28px;
+  cursor:pointer;
+}
+.dropdown {
+  display:none;
+  position:absolute;
+  right:0;
+  top:40px;
+  background:#1b1b1f;
+  border-radius:8px;
+  overflow:hidden;
+  box-shadow:0 4px 12px rgba(0,0,0,0.5);
+}
+.dropdown a {
+  display:block;
+  padding:12px 22px;
+  color:#fff;
+  text-decoration:none;
+  font-weight:500;
+  transition:0.2s;
+}
+.dropdown a:hover {
+  background:#00ffa3;
+  color:#000;
+}
 
-  /* Summary boxes */
-  .summary-container { display:flex; flex-wrap:wrap; gap:15px; padding:20px; justify-content:center; }
-  .summary-box { background:#1a1a1a; flex:1 1 180px; min-width:180px; border-radius:10px; padding:20px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.5); transition:0.3s; }
-  .summary-box:hover { background:#222; }
-  .summary-box h3 { margin:5px 0; font-size:16px; color:#aaa; }
-  .summary-box p { margin:0; font-size:22px; font-weight:bold; color:#00e676; }
+/* Summary boxes */
+.summary-container {
+  display:flex;
+  flex-wrap:wrap;
+  gap:20px;
+  padding:20px 30px;
+  justify-content:center;
+}
+.summary-box {
+  background:#1b1b1f;
+  flex:1 1 200px;
+  min-width:200px;
+  border-radius:12px;
+  padding:25px;
+  text-align:center;
+  box-shadow:0 3px 12px rgba(0,0,0,0.5);
+  transition:0.3s;
+}
+.summary-box:hover {
+  background:#25252a;
+}
+.summary-box h3 {
+  margin:5px 0;
+  font-size:16px;
+  color:#aaa;
+  letter-spacing:0.5px;
+}
+.summary-box p {
+  margin:0;
+  font-size:24px;
+  font-weight:bold;
+  color:#00ffa3;
+}
 
-  /* Table container */
-  .table-container { overflow-x:auto; padding:0 20px 20px 20px; }
-  table { width:100%; border-collapse:collapse; margin-top:10px; background:#0d0d0d; border-radius:10px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.5); }
-  thead { background:#1a1a1a; position:sticky; top:0; }
-  th, td { padding:12px; text-align:left; font-size:14px; }
-  th { font-weight:bold; color:#aaa; }
-  tbody tr:nth-child(even) { background:#141414; }
-  tbody tr:hover { background:#1e1e1e; cursor:pointer; transform:scale(1.002); }
+/* Table container */
+.table-container {
+  overflow-x:auto;
+  padding:0 30px 30px 30px;
+}
+table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+  background:#121217;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 2px 16px rgba(0,0,0,0.5);
+}
+thead {
+  background:#1b1b1f;
+  position:sticky;
+  top:0;
+  z-index:50;
+}
+th, td {
+  padding:14px 12px;
+  text-align:left;
+  font-size:14px;
+}
+th {
+  font-weight:bold;
+  color:#aaa;
+}
+tbody tr:nth-child(even) { background:#18181c; }
+tbody tr:hover { background:#1e1e22; cursor:pointer; transform:scale(1.002); transition:0.2s; }
 
-  img.coin-logo { width:28px; height:28px; vertical-align:middle; margin-right:8px; border-radius:50%; }
-  .green { color:#00e676; font-weight:bold; }
-  .red { color:#ff4d4d; font-weight:bold; }
+img.coin-logo { width:28px; height:28px; vertical-align:middle; margin-right:8px; border-radius:50%; }
+.green { color:#00ffa3; font-weight:bold; }
+.red { color:#ff4d4d; font-weight:bold; }
 
-  canvas { width:100px !important; height:40px !important; }
+canvas { width:100px !important; height:40px !important; }
 
-  /* Loading animation */
-  .loading { text-align:center; padding:50px; font-size:18px; color:#aaa; }
+/* Loading */
+.loading { text-align:center; padding:50px; font-size:18px; color:#aaa; }
 
-  @media(max-width:1000px){
-    table, thead, tbody, th, td, tr { display:block; }
-    thead tr { display:none; }
-    tbody tr { margin-bottom:15px; border-bottom:2px solid #222; }
-    td { display:flex; justify-content:space-between; padding:10px 5px; }
-    td::before { content:attr(data-label); font-weight:bold; color:#aaa; flex:1; }
-    canvas { width:80px !important; height:30px !important; }
-  }
+/* Responsive */
+@media(max-width:1000px){
+  table, thead, tbody, th, td, tr { display:block; }
+  thead tr { display:none; }
+  tbody tr { margin-bottom:15px; border-bottom:2px solid #222; }
+  td { display:flex; justify-content:space-between; padding:10px 5px; }
+  td::before { content:attr(data-label); font-weight:bold; color:#aaa; flex:1; }
+  canvas { width:80px !important; height:30px !important; }
+}
 </style>
 </head>
 <body>
 
 <header>
-  <h1>JoinTheRealWorld Dashboard</h1>
+  <h1>JoinTheRealWorld</h1>
   <div class="menu-container">
     <button class="menu-btn" onclick="toggleMenu()">⋮</button>
     <div class="dropdown" id="menuDropdown">
@@ -93,7 +189,7 @@
   </div>
 </div>
 
-<!-- Table container -->
+<!-- Crypto Table -->
 <div class="table-container">
   <div class="loading" id="loadingText">Loading crypto data...</div>
   <table id="cryptoTable" style="display:none;">
@@ -116,13 +212,12 @@
 </div>
 
 <script>
-let charts = {};
-const coins = ["bitcoin","ethereum","binancecoin","solana","bitcoin-cash"];
+let charts={};
+const coins=["bitcoin","ethereum","binancecoin","solana","bitcoin-cash"];
 
-// Dropdown
 function toggleMenu(){
-  const menu = document.getElementById('menuDropdown');
-  menu.style.display = menu.style.display==='block'?'none':'block';
+  const menu=document.getElementById('menuDropdown');
+  menu.style.display=(menu.style.display==='block')?'none':'block';
 }
 window.onclick=function(e){
   if(!e.target.matches('.menu-btn')){
@@ -131,31 +226,27 @@ window.onclick=function(e){
   }
 }
 
-// Fetch data
 async function fetchCrypto(){
   try{
     const res=await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coins.join(',')}&order=market_cap_desc&sparkline=true&price_change_percentage=1h,24h,7d`);
     const coinsData=await res.json();
-    
-    // Summary boxes
+
     let totalMarketCap=0,totalVolume=0,btcDominance=0;
-    coinsData.forEach(c=>{totalMarketCap+=c.market_cap; totalVolume+=c.total_volume; if(c.id==="bitcoin") btcDominance=((c.market_cap/totalMarketCap)*100).toFixed(2)});
+    coinsData.forEach(c=>{totalMarketCap+=c.market_cap; totalVolume+=c.total_volume; if(c.id==='bitcoin') btcDominance=((c.market_cap/totalMarketCap)*100).toFixed(2)});
     document.getElementById('totalMarketCap').innerText=`$${totalMarketCap.toLocaleString()}`;
     document.getElementById('totalVolume').innerText=`$${totalVolume.toLocaleString()}`;
     document.getElementById('btcDominance').innerText=`${btcDominance}%`;
     document.getElementById('activeCoins').innerText=coinsData.length;
-    
+
     renderTable(coinsData);
     document.getElementById('loadingText').style.display='none';
     document.getElementById('cryptoTable').style.display='table';
-    
   }catch(err){
     console.error(err);
-    document.getElementById('loadingText').innerText='Error fetching data. Use HTTPS.';
+    document.getElementById('loadingText').innerText='Error fetching data.';
   }
 }
 
-// Render table
 function renderTable(data){
   const searchText=document.getElementById('searchBox')?.value.toLowerCase()||'';
   const filtered=data.filter(c=>c.name.toLowerCase().includes(searchText)||c.symbol.toLowerCase().includes(searchText));
@@ -179,22 +270,13 @@ function renderTable(data){
       <td data-label="7d"><canvas id="chart-${c.id}"></canvas></td>
     `;
     tbody.appendChild(row);
-    
     const ctx=document.getElementById(`chart-${c.id}`).getContext('2d');
     if(!charts[c.id]){
-      charts[c.id]=new Chart(ctx,{
-        type:'line',
-        data:{labels:c.sparkline_in_7d.price.map((_,i)=>i), datasets:[{data:c.sparkline_in_7d.price,borderColor:'#00e676',borderWidth:2,fill:false}]},
-        options:{responsive:true, plugins:{legend:{display:false}}, scales:{x:{display:false},y:{display:false}}}
-      });
-    }else{
-      charts[c.id].data.datasets[0].data=c.sparkline_in_7d.price;
-      charts[c.id].update();
-    }
+      charts[c.id]=new Chart(ctx,{type:'line',data:{labels:c.sparkline_in_7d.price.map((_,i)=>i),datasets:[{data:c.sparkline_in_7d.price,borderColor:'#00ffa3',borderWidth:2,fill:false}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
+    }else{charts[c.id].data.datasets[0].data=c.sparkline_in_7d.price;charts[c.id].update();}
   });
 }
 
-document.getElementById('searchBox')?.addEventListener('input',()=>fetchCrypto());
 fetchCrypto();
 setInterval(fetchCrypto,5000);
 </script>
