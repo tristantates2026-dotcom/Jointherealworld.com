@@ -111,4 +111,187 @@ document.addEventListener('click', function(event) {
     menu.style.display = 'none';
   }
 });
+</script><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Navigation Header</title>
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-color: #0b1118;
+        color: #ffffff;
+    }
+
+    .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px;
+        background-color: #0b1118;
+        height: 60px;
+        border-bottom: 1px solid #1a222d;
+        position: relative;
+    }
+
+    /* Left Section: Hamburger and Menu Text */
+    .left-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .hamburger {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .hamburger span {
+        display: block;
+        width: 25px;
+        height: 3px;
+        background-color: #ffffff;
+        border-radius: 2px;
+    }
+
+    .menu-text {
+        color: #bdc3c7;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 1.2rem;
+        font-weight: 500;
+    }
+
+    .left-section:hover .menu-text { color: #ffffff; }
+
+    /* Dropdown Menu */
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 60px;
+        left: 0;
+        background-color: #1a222d;
+        border: 1px solid #2c3e50;
+        border-radius: 5px;
+        min-width: 180px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        z-index: 100;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .dropdown-menu a {
+        padding: 12px 20px;
+        text-decoration: none;
+        color: #bdc3c7;
+        font-size: 1rem;
+        transition: background 0.2s, color 0.2s;
+    }
+
+    .dropdown-menu a:hover {
+        background-color: #34495e;
+        color: #ffffff;
+    }
+
+    .left-section.active .dropdown-menu {
+        display: flex;
+    }
+
+    /* Center Section: Logo */
+    .logo-container {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .logo-placeholder {
+        width: 50px;
+        height: 50px;
+        background: radial-gradient(circle, #f39c12 20%, #7f8c8d 80%);
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    /* Right Section: Profile Icon */
+    .profile-section {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    .profile-circle {
+        width: 38px;
+        height: 38px;
+        border: 2px solid #5d6d7e;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .profile-circle::after {
+        content: '👤';
+        font-size: 20px;
+        filter: grayscale(1) brightness(1.5);
+    }
+
+    .profile-circle:hover { border-color: #ffffff; }
+
+</style>
+</head>
+<body>
+
+<header class="header-container">
+    <div class="left-section" id="menu-toggle">
+        <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="menu-text">Menu</div>
+
+        <div class="dropdown-menu" id="dropdown-menu">
+            <a href="#">Deposit</a>
+            <a href="#">Withdrawal</a>
+            <a href="#">Settings</a>
+            <a href="#">Live Chat</a>
+            <a href="#">Transaction History</a>
+        </div>
+    </div>
+
+    <div class="logo-container">
+        <div class="logo-placeholder">
+            <span style="font-size: 24px;">♞</span>
+        </div>
+    </div>
+
+    <div class="profile-section">
+        <div class="profile-circle"></div>
+    </div>
+</header>
+
+<script>
+    // Toggle the dropdown menu
+    const menuToggle = document.getElementById('menu-toggle');
+    menuToggle.addEventListener('click', () => {
+        menuToggle.classList.toggle('active');
+    });
+
+    // Close menu if clicked outside
+    document.addEventListener('click', (e) => {
+        if (!menuToggle.contains(e.target)) {
+            menuToggle.classList.remove('active');
+        }
+    });
 </script>
+
+</body>
+</html>
