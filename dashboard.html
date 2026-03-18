@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Interface - Pro Live</title>
+    <style>
+        :root {
+            --bg-dark: #0b1118;
+            --sidebar-bg: #111a24;
+            --accent-blue: #3861fb;
+            --text-grey: #bdc3c7;
+            --border: #1a222d;
+            --accent-green: #00ff00;
+            --accent-red: #ff4d4d;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background-color: var(--bg-dark);
+            color: white;
+            overflow-x: hidden;
+            padding-bottom: 100px;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            height: 65px;
+            background-color: var(--bg-dark);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .menu-trigger { display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 5px; border-radius: 8px; transition: 0.2s; }
+        .menu-trigger:active { background: #1a1f26; }
+        
+        .hamburger span { display: block; height: 3px; background-color: white; margin-bottom: 5px; border-radius: 2px; }
+        .hamburger span:nth-child(1) { width: 18px; }
+        .hamburger span:nth-child(2) { width: 24px; }
+        .hamburger span:nth-child(3) { width: 14px; }
+        .menu-label { font-size: 1.2rem; font-weight: 500; color: var(--text-grey); text-transform: uppercase; }
+
+        .logo-center { position: absolute; left: 50%; transform: translateX(-50%); }
+        .logo-sphere {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #f39c12 10%, #d35400 40%, #2c3e50 90%);
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 0 15px rgba(243, 156, 18, 0.3); border: 1px solid rgba(255,255,255,0.1);
+        }
+        .knight-icon { font-size: 24px; color: black; text-shadow: 0px 0px 2px rgba(255,255,255,0.5); }
+
+        /* --- CLICKABLE ELEMENTS --- */
+        .clickable { cursor: pointer; transition: transform 0.1s, opacity 0.2s; -webkit-tap-highlight-color: transparent; }
+        .clickable:active { transform: scale(0.96); opacity: 0.8; }
+
+        /* --- HOME CONTENT --- */
+        .search-container { padding: 15px; }
+        .search-bar { background: #1a1f26; border-radius: 20px; padding: 12px 15px; display: flex; align-items: center; color: #5d6d7e; font-size: 0.9rem; border: 1px solid transparent; }
+        .search-bar:focus-within { border-color: var(--accent-blue); }
+
+        .balance-card { padding: 20px 15px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .balance-amount { font-size: 2.5rem; font-weight: bold; margin: 0; color: white; }
+        .balance-status { color: var(--text-grey); font-size: 0.8rem; margin-top: 5px; background: #1a1f26; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+
+        .actions-row { display: flex; justify-content: space-around; padding: 20px 0; }
+        .action-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 0.8rem; color: white; }
+        .action-circle { width: 58px; height: 58px; background: #1a1f26; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.4rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+        .tabs-row { display: flex; gap: 15px; padding: 15px; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+        .pill-tab { padding: 8px 18px; background: #1a1f26; border-radius: 20px; font-size: 0.85rem; font-weight: 600; white-space: nowrap; transition: 0.3s; }
+        .pill-tab.active { background: white; color: black; }
+
+        /* Asset Items */
+        .asset-item { display: flex; justify-content: space-between; align-items: center; padding: 18px 15px; border-bottom: 1px solid #111a24; }
+        .asset-left { display: flex; align-items: center; gap: 14px; }
+        .asset-logo-img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; background: #1a1f26; }
+        .symbol { font-weight: bold; font-size: 1.1rem; }
+        .price-data { font-size: 0.8rem; color: var(--text-grey); margin-top: 3px; }
+        .asset-right { text-align: right; }
+        .balance-qty { font-weight: bold; font-size: 1rem; }
+        .balance-fiat { font-size: 0.8rem; color: var(--text-grey); margin-top: 3px; }
+        
+        .empty-state { padding: 60px 20px; text-align: center; color: var(--text-grey); }
+        .apy-badge { background: rgba(0, 255, 0, 0.1); color: var(--accent-green); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+
+        /* --- SIDEBAR & NAV --- */
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background-color: var(--sidebar-bg); z-index: 2000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 10px 0 25px rgba(0,0,0,0.6); }
+        .sidebar.open { left: 0; }
+        .sidebar-link { display: block; padding: 20px 25px; color: var(--text-grey); text-decoration: none; border-bottom: 1px solid var(--border); font-size: 1.05rem; }
+        .sidebar-link:active { background: #1a222d; color: white; }
+        
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 1500; backdrop-filter: blur(2px); }
+        
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 80px; background-color: var(--bg-dark); border-top: 1px solid var(--border); display: flex; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: var(--text-grey); font-size: 10px; font-weight: 600; gap: 5px; }
+        .nav-tab.active { color: var(--accent-blue); }
+        .nav-icon { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.2; }
+        
+        .profile-btn { width: 42px; height: 42px; border: 2px solid #3d4955; border-radius: 50%; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+    </style>
+</head>
+<body>
+
+    <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div style="padding: 30px 25px 15px; color: #5d6d7e; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;">Account Services</div>
+        <a href="#" class="sidebar-link">Profile Details</a>
+        <a href="#" class="sidebar-link">Deposit Funds</a>
+        <a href="#" class="sidebar-link">Withdrawal</a>
+        <a href="#" class="sidebar-link">Security Settings</a>
+        <a href="#" class="sidebar-link">Live Chat Support</a>
+    </div>
+
+    <header class="header">
+        <div class="menu-trigger" onclick="toggleMenu()">
+            <div class="hamburger"><span></span><span></span><span></span></div>
+            <div class="menu-label">MENU</div>
+        </div>
+        <div class="logo-center clickable">
+            <div class="logo-sphere"><span class="knight-icon">♞</span></div>
+        </div>
+        <div class="profile-btn clickable">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bdc3c7" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+        </div>
+    </header>
+
+    <main>
+        <div class="search-container">
+            <div class="search-bar clickable">
+                <span style="margin-right:10px; font-size: 1.1rem;">🔍</span> Search Markets...
+            </div>
+        </div>
+
+        <section class="balance-card">
+            <div class="balance-info clickable">
+                <div style="font-size: 0.85rem; color: var(--text-grey); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                    <div style="width:10px; height:10px; background:#3861fb; border-radius:50%;"></div>
+                    Portfolio Balance ▾
+                </div>
+                <h1 class="balance-amount" id="total-balance">$0.00</h1>
+                <div class="balance-status">Ready to Invest</div>
+            </div>
+        </section>
+
+        <section class="actions-row">
+            <div class="action-btn clickable"><div class="action-circle">↑</div><span>Send</span></div>
+            <div class="action-btn clickable"><div class="action-circle">↓</div><span>Receive</span></div>
+            <div class="action-btn clickable">
+                <div class="action-circle">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </div>
+                <span>History</span>
+            </div>
+            <div class="action-btn clickable">
+                <div class="action-circle">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="12" cy="5" r="1"></circle>
+                        <circle cx="12" cy="19" r="1"></circle>
+                    </svg>
+                </div>
+                <span>More</span>
+            </div>
+        </section>
+
+        <div class="tabs-row">
+            <div class="pill-tab active clickable" id="tab-crypto" onclick="switchCategory('crypto')">Crypto</div>
+            <div class="pill-tab clickable" id="tab-defi" onclick="switchCategory('defi')">DeFi Tokens</div>
+            <div class="pill-tab clickable" id="tab-nft" onclick="switchCategory('nft')">NFT Portfolio</div>
+            <div class="pill-tab clickable" id="tab-staking" onclick="switchCategory('staking')">Staking</div>
+        </div>
+
+        <section id="asset-list">
+            <div style="padding: 40px; text-align: center; color: var(--text-grey); font-size: 0.9rem;">
+                Connecting to Live Exchange...
+            </div>
+        </section>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="javascript:void(0)" class="nav-tab active" onclick="makeActive(this)">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            <span>Home</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-tab" onclick="makeActive(this)">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M17 7l-5-5-5 5M12 2v10M7 17l5 5 5-5M12 22V12"/></svg>
+            <span>Deposit/Withdraw</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-tab" onclick="makeActive(this)">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0z"/><path d="M8 14s1.5-4 4-4 4 4 4 4"/></svg>
+            <span>Market</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-tab" onclick="makeActive(this)">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z"/></svg>
+            <span>Portfolio</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-tab" onclick="makeActive(this)">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Community</span>
+        </a>
+    </nav>
+
+    <script>
+        let currentCategory = 'crypto';
+
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('open');
+            overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+        }
+
+        function makeActive(element) {
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        function switchCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.pill-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(`tab-${cat}`).classList.add('active');
+            loadLiveMarket(); 
+        }
+
+        async function loadLiveMarket() {
+            const listContainer = document.getElementById('asset-list');
+            
+            if (currentCategory === 'nft') {
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div style="display: flex; justify-content: center; margin-bottom: 15px;">
+                            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                        </div>
+                        <div style="font-weight: bold; color: white;">No NFTs found</div>
+                        <div style="font-size: 0.8rem; margin-top: 5px;">You don't have any digital collectibles yet.</div>
+                        <button class="clickable" style="margin-top: 20px; background: var(--accent-blue); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold;">Browse Market</button>
+                    </div>
+                `;
+                return;
+            }
+
+            if (currentCategory === 'staking') {
+                const stakeCoins = [
+                    { name: 'Ethereum', symbol: 'ETH', apy: '4.2%', img: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png' },
+                    { name: 'Solana', symbol: 'SOL', apy: '7.1%', img: 'https://assets.coingecko.com/coins/images/4128/large/solana.png' },
+                    { name: 'Cardano', symbol: 'ADA', apy: '3.5%', img: 'https://assets.coingecko.com/coins/images/975/large/cardano.png' }
+                ];
+                listContainer.innerHTML = '';
+                stakeCoins.forEach(coin => {
+                    listContainer.innerHTML += `
+                        <div class="asset-item clickable">
+                            <div class="asset-left">
+                                <img src="${coin.img}" class="asset-logo-img">
+                                <div class="asset-details">
+                                    <div class="symbol">${coin.symbol} <span class="apy-badge">EARN ${coin.apy}</span></div>
+                                    <div class="price-data">${coin.name} Staking</div>
+                                </div>
+                            </div>
+                            <div class="asset-right">
+                                <button style="background: transparent; border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold;">Stake</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                return;
+            }
+
+            const configs = {
+                crypto: ['bitcoin', 'ethereum', 'tether', 'solana', 'tron', 'ripple'],
+                defi: ['uniswap', 'aave', 'chainlink', 'maker', 'compound-governance-token', 'pancakeswap-token']
+            };
+
+            const ids = configs[currentCategory].join(',');
+
+            try {
+                const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=false&price_change_percentage=24h`);
+                const data = await response.json();
+
+                if(listContainer.innerHTML.includes('Connecting')) listContainer.innerHTML = '';
+                if (currentCategory === 'nft' || currentCategory === 'staking') return;
+
+                data.forEach(coin => {
+                    let assetRow = document.getElementById(`asset-${coin.id}`);
+                    const price = coin.current_price.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+                    const change = coin.price_change_percentage_24h?.toFixed(2) || "0.00";
+                    const color = change >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+
+                    const rowContent = `
+                        <div class="asset-left">
+                            <img src="${coin.image}" class="asset-logo-img" alt="${coin.name}">
+                            <div class="asset-details">
+                                <div class="symbol">${coin.symbol.toUpperCase()}</div>
+                                <div class="price-data">
+                                    ${price} 
+                                    <span style="color:${color}; margin-left: 5px;">
+                                        ${change >= 0 ? '▲' : '▼'} ${Math.abs(change)}%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="asset-right">
+                            <div class="balance-qty">0.00 ${coin.symbol.toUpperCase()}</div>
+                            <div class="balance-fiat">$0.00</div>
+                        </div>
+                    `;
+
+                    if (assetRow && listContainer.contains(assetRow)) {
+                        assetRow.innerHTML = rowContent;
+                    } else {
+                        if (listContainer.children.length > 8) listContainer.innerHTML = ''; 
+                        const newRow = document.createElement('div');
+                        newRow.id = `asset-${coin.id}`;
+                        newRow.className = 'asset-item clickable';
+                        newRow.innerHTML = rowContent;
+                        listContainer.appendChild(newRow);
+                    }
+                });
+            } catch (error) {
+                console.error("Update Failed", error);
+            }
+        }
+
+        loadLiveMarket();
+        setInterval(() => {
+            if (currentCategory === 'crypto' || currentCategory === 'defi') loadLiveMarket();
+        }, 2000);
+    </script>
+</body>
+</html>
