@@ -57,7 +57,6 @@
         }
         .knight-icon { font-size: 24px; color: black; text-shadow: 0px 0px 2px rgba(255,255,255,0.5); }
 
-        /* --- CLICKABLE ELEMENTS --- */
         .clickable { cursor: pointer; transition: transform 0.1s, opacity 0.2s; -webkit-tap-highlight-color: transparent; }
         .clickable:active { transform: scale(0.96); opacity: 0.8; }
 
@@ -77,13 +76,7 @@
         .pill-tab { padding: 8px 18px; background: #1a1f26; border-radius: 20px; font-size: 0.85rem; font-weight: 600; white-space: nowrap; transition: 0.3s; }
         .pill-tab.active { background: white; color: black; }
 
-        /* Asset List Container Fix */
-        #asset-list {
-            min-height: 450px; 
-            display: flex;
-            flex-direction: column;
-        }
-
+        #asset-list { min-height: 450px; display: flex; flex-direction: column; }
         .asset-item { display: flex; justify-content: space-between; align-items: center; padding: 18px 15px; border-bottom: 1px solid #111a24; }
         .asset-left { display: flex; align-items: center; gap: 14px; }
         .asset-logo-img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; background: #1a1f26; }
@@ -93,7 +86,6 @@
         .balance-qty { font-weight: bold; font-size: 1rem; }
         .balance-fiat { font-size: 0.8rem; color: var(--text-grey); margin-top: 3px; }
         
-        /* NFT Empty State Fix */
         .empty-state { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 60px 20px; text-align: center; color: var(--text-grey); }
         .apy-badge { background: rgba(0, 255, 0, 0.1); color: var(--accent-green); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
 
@@ -101,32 +93,29 @@
         .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background-color: var(--sidebar-bg); z-index: 4000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 10px 0 25px rgba(0,0,0,0.6); }
         .sidebar.open { left: 0; }
         .sidebar-link { display: block; padding: 20px 25px; color: var(--text-grey); text-decoration: none; border-bottom: 1px solid var(--border); font-size: 1.05rem; }
-        .sidebar-link:active { background: #1a222d; color: white; }
         
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 3500; backdrop-filter: blur(2px); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; z-index: 3000; backdrop-filter: blur(5px); }
         
         .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 80px; background-color: var(--bg-dark); border-top: 1px solid var(--border); display: flex; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
         .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: var(--text-grey); font-size: 10px; font-weight: 600; gap: 5px; }
         .nav-tab.active { color: var(--accent-blue); }
         .nav-icon { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.2; }
         
-        .profile-btn { width: 42px; height: 42px; border: 2px solid #3d4955; border-radius: 50%; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-
-        /* --- ADDED DRAWER MODALS --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; z-index: 3000; backdrop-filter: blur(5px); }
+        /* --- DRAWER MODALS --- */
         .drawer-modal { position: fixed; bottom: -100%; left: 0; width: 100%; background: var(--sidebar-bg); border-radius: 25px 25px 0 0; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 3001; padding-bottom: 30px; max-height: 90vh; overflow-y: auto; }
         .drawer-modal.open { bottom: 0; }
         .modal-header { padding: 20px; text-align: left; border-bottom: 1px solid var(--border); font-weight: bold; display: flex; align-items: center; gap: 15px; }
-        
-        /* Service Grid Styling */
+
+        /* SVG Icon Grid Styling */
         .service-section-title { padding: 20px 20px 10px; font-size: 1.1rem; font-weight: 600; color: white; }
         .services-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 10px 15px; }
-        .service-item { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 10px 0; }
-        .service-icon-bg { width: 50px; height: 50px; background: var(--card-light); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; }
+        .service-item { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+        .service-icon-bg { width: 50px; height: 50px; background: var(--card-light); border-radius: 50%; display: flex; justify-content: center; align-items: center; }
         .service-icon-bg svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; }
-        .service-label { font-size: 0.7rem; color: var(--text-grey); font-weight: 500; line-height: 1.2; }
+        .service-label { font-size: 0.7rem; color: var(--text-grey); font-weight: 500; }
 
-        /* Asset Management Toggles */
+        /* Manage Assets Toggle Styles */
         .manage-assets-container { padding: 25px 15px; display: flex; justify-content: center; }
         .manage-btn { color: var(--accent-blue); font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 8px; background: transparent; border: none; }
         .asset-toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border); }
@@ -137,9 +126,8 @@
         input:checked + .slider { background-color: var(--accent-blue); }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        /* Fast Loader Animation */
         .loader-container { display: flex; flex-direction: column; justify-content: center; align-items: center; flex: 1; padding: 80px 0; }
-        .spinner { width: 26px; height: 26px; border: 3px solid rgba(255, 255, 255, 0.05); border-top: 3px solid var(--accent-blue); border-radius: 50%; animation: spin 0.6s linear infinite; }
+        .spinner { width: 32px; height: 32px; border: 3px solid rgba(255, 255, 255, 0.1); border-top: 3px solid var(--accent-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
@@ -152,17 +140,17 @@
         <div class="modal-header"><span class="clickable" onclick="closeEverything()">✕</span><span>Services</span></div>
         <div class="service-section-title">Trade</div>
         <div class="services-grid">
-            <div class="service-item"><div class="service-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="2"/><circle cx="9" cy="7" r="4" stroke-width="2"/></svg></div><div class="service-label">P2P</div></div>
-            <div class="service-item"><div class="service-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 3l4 4-4 4M8 21l-4-4 4-4" stroke-width="2"/></svg></div><div class="service-label">Swap</div></div>
-            <div class="service-item"><div class="service-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21.21 15.89A10 10 0 1 1 8 2.83" stroke-width="2"/></svg></div><div class="service-label">Futures</div></div>
-            <div class="service-item"><div class="service-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6" stroke-width="2"/></svg></div><div class="service-label">Copy Trading</div></div>
+            <div class="service-item"><div class="service-icon-bg"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="service-label">P2P</div></div>
+            <div class="service-item"><div class="service-icon-bg"><svg viewBox="0 0 24 24"><path d="M16 3l4 4-4 4M8 21l-4-4 4-4M20 7H4M4 17h16"/></svg></div><div class="service-label">Swap</div></div>
+            <div class="service-item"><div class="service-icon-bg"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 1 0 20M2 12a14.5 14.5 0 0 0 20 0"/></svg></div><div class="service-label">Futures</div></div>
+            <div class="service-item"><div class="service-icon-bg"><svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></div><div class="service-label">Copy Trading</div></div>
         </div>
     </div>
 
     <div class="drawer-modal" id="manage-modal">
         <div class="modal-header"><span class="clickable" onclick="closeEverything()">✕</span><span>Manage Assets</span></div>
         <div id="manage-list-container"></div>
-        <div style="padding: 20px;"><button class="clickable" onclick="closeEverything()" style="width:100%; background: var(--accent-blue); border:none; color:white; padding:15px; border-radius:12px; font-weight:bold;">Save Changes</button></div>
+        <div style="padding: 20px;"><button class="clickable" onclick="closeEverything()" style="width:100%; background: var(--accent-blue); border:none; color:white; padding:15px; border-radius:12px; font-weight:bold;">Done</button></div>
     </div>
 
     <div class="sidebar" id="sidebar">
@@ -182,7 +170,7 @@
         <div class="logo-center clickable">
             <div class="logo-sphere"><span class="knight-icon">♞</span></div>
         </div>
-        <div class="profile-btn clickable">
+        <div class="profile-btn clickable" style="width: 42px; height: 42px; border: 2px solid #3d4955; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bdc3c7" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>
         </div>
     </header>
@@ -206,9 +194,7 @@
                 <span>History</span>
             </div>
             <div class="action-btn clickable" onclick="openMoreDrawer()">
-                <div class="action-circle">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-                </div>
+                <div class="action-circle"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></div>
                 <span>More</span>
             </div>
         </section>
@@ -232,8 +218,8 @@
 
     <nav class="bottom-nav">
         <a href="javascript:void(0)" class="nav-tab active" onclick="makeActive(this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Home</span></a>
-        <a href="javascript:void(0)" class="nav-tab" onclick="makeActive(this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M17 7l-5-5-5 5M12 2v10M7 17l5 5 5-5M12 22V12"/></svg><span>Deposit</span></a>
-        <a href="javascript:void(0)" class="nav-tab" onclick="makeActive(this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0z"/><path d="M8 14s1.5-4 4-4 4 4 4 4"/></svg><span>Market</span></a>
+        <a href="javascript:void(0)" class="nav-tab" onclick="makeActive(this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M17 7l-5-5-5 5M12 2v10"/></svg><span>Deposit</span></a>
+        <a href="javascript:void(0)" class="nav-tab" onclick="makeActive(this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0z"/></svg><span>Market</span></a>
         <a href="javascript:void(0)" class="nav-tab" onclick="makeActive(this)"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z"/></svg><span>Portfolio</span></a>
         <a href="javascript:void(0)" class="nav-tab" onclick="makeActive(this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Community</span></a>
     </nav>
@@ -241,11 +227,10 @@
     <script>
         let currentCategory = 'crypto';
         let isTabSwitching = false;
-        
         let enabledAssets = { crypto: ['bitcoin', 'ethereum', 'tether', 'solana', 'tron', 'ripple'], defi: ['uniswap', 'aave', 'chainlink', 'maker'] };
 
         const allAvailableAssets = {
-            crypto: [{id:'bitcoin',name:'Bitcoin'},{id:'ethereum',name:'Ethereum'},{id:'tether',name:'Tether'},{id:'solana',name:'Solana'},{id:'tron',name:'TRON'},{id:'ripple',name:'Ripple'},{id:'dogecoin',name:'Dogecoin'},{id:'cardano',name:'Cardano'},{id:'polkadot',name:'Polkadot'},{id:'shiba-inu',name:'Shiba Inu'},{id:'litecoin',name:'Litecoin'}],
+            crypto: [{id:'bitcoin',name:'Bitcoin'},{id:'ethereum',name:'Ethereum'},{id:'tether',name:'Tether'},{id:'solana',name:'Solana'},{id:'tron',name:'TRON'},{id:'ripple',name:'Ripple'},{id:'dogecoin',name:'Dogecoin'},{id:'cardano',name:'Cardano'},{id:'polkadot',name:'Polkadot'},{id:'shiba-inu',name:'Shiba Inu'},{id:'litecoin',name:'Litecoin'},{id:'pepe',name:'Pepe'}],
             defi: [{id:'uniswap',name:'Uniswap'},{id:'aave',name:'Aave'},{id:'chainlink',name:'Chainlink'},{id:'maker',name:'Maker'},{id:'compound-governance-token',name:'Compound'}]
         };
 
@@ -272,7 +257,7 @@
             let index = enabledAssets[currentCategory].indexOf(id);
             if(index > -1) enabledAssets[currentCategory].splice(index, 1);
             else enabledAssets[currentCategory].push(id);
-            loadLiveMarket(); 
+            loadLiveMarket(true); 
         }
 
         function makeActive(element) { document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active')); element.classList.add('active'); }
@@ -285,14 +270,13 @@
             document.getElementById(`tab-${cat}`).classList.add('active');
             document.getElementById('manage-trigger-area').style.display = (cat === 'nft' || cat === 'staking') ? 'none' : 'flex';
             
-            // FAST SNAPPY LOAD (0.3s)
             const listContainer = document.getElementById('asset-list');
             listContainer.innerHTML = `<div class="loader-container"><div class="spinner"></div></div>`;
             
-            setTimeout(() => { isTabSwitching = false; loadLiveMarket(); }, 300);
+            setTimeout(() => { isTabSwitching = false; loadLiveMarket(true); }, 400); // Snappy load
         }
 
-        async function loadLiveMarket() {
+        async function loadLiveMarket(forceClear = false) {
             const listContainer = document.getElementById('asset-list');
             if (currentCategory === 'nft') {
                 listContainer.innerHTML = `<div class="empty-state"><div style="display:flex;justify-content:center;margin-bottom:15px;"><svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div><div style="font-weight:bold;color:white;">No NFTs found</div><div style="font-size:0.8rem;margin-top:5px;">You don't have any digital collectibles yet.</div><button class="clickable" style="margin-top:20px;background:var(--accent-blue);color:white;border:none;padding:10px 20px;border-radius:8px;font-weight:bold;">Browse Market</button></div>`;
@@ -315,8 +299,7 @@
                 const data = await response.json();
                 if (isTabSwitching) return;
                 
-                // Clear the loader or the NFT text immediately before building the list
-                if(listContainer.innerHTML.includes('spinner') || listContainer.innerHTML.includes('No NFTs')) listContainer.innerHTML = '';
+                if(forceClear || listContainer.innerHTML.includes('spinner') || listContainer.innerHTML.includes('No NFTs')) listContainer.innerHTML = '';
 
                 data.forEach(coin => {
                     let assetRow = document.getElementById(`asset-${coin.id}`);
@@ -342,10 +325,13 @@
                         listContainer.appendChild(div);
                     }
                 });
-                Array.from(listContainer.children).forEach(child => { if(child.id.startsWith('asset-') && !enabledAssets[currentCategory].includes(child.id.replace('asset-', ''))) child.remove(); });
             } catch (e) { console.error(e); }
         }
-        loadLiveMarket();
+
+        // 1 SECOND INITIAL LOAD
+        document.getElementById('asset-list').innerHTML = `<div class="loader-container"><div class="spinner"></div></div>`;
+        setTimeout(() => loadLiveMarket(), 1000);
+        
         setInterval(() => { if (!isTabSwitching && (currentCategory === 'crypto' || currentCategory === 'defi')) loadLiveMarket(); }, 2500);
     </script>
 </body>
