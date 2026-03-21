@@ -1,6 +1,6 @@
 let currentBalance = parseFloat(localStorage.getItem('investmentBalance')) || 799.00;
 let isTrading = false;
-let latestLivePrice = 0; // Global tracker for exit prices
+let latestLivePrice = 0; 
 const binanceWs = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@trade');
 
 let sessionHigh = 0, sessionLow = 0, pricePointCount = 0;
@@ -15,7 +15,7 @@ binanceWs.onmessage = (event) => {
     }
 
     pricePointCount++;
-    if (pricePointCount > 40) { // High frequency scanning
+    if (pricePointCount > 40) { 
         sessionHigh = latestLivePrice + 1.25;
         sessionLow = latestLivePrice - 1.25;
         pricePointCount = 0;
@@ -31,7 +31,6 @@ function executeLiveTrade(side, entryPrice) {
     isTrading = true;
     const now = new Date();
     const openTimeStr = now.toLocaleTimeString();
-    const fullDate = now.toLocaleDateString();
     
     localStorage.setItem('bot_is_executing', 'true');
     localStorage.setItem('last_trade_side', side);
@@ -39,9 +38,8 @@ function executeLiveTrade(side, entryPrice) {
     localStorage.setItem('last_open_time', openTimeStr);
     window.dispatchEvent(new Event('storage'));
 
-    // Hold trade for 10-15 seconds
     setTimeout(() => {
-        const exitPrice = latestLivePrice; // Capture real crypto price at close
+        const exitPrice = latestLivePrice; 
         const profit = (Math.random() * 9 + 4.80); 
         currentBalance += profit;
         
@@ -54,12 +52,11 @@ function executeLiveTrade(side, entryPrice) {
             exitPrice: exitPrice.toFixed(2),
             openTime: openTimeStr,
             closeTime: new Date().toLocaleTimeString(),
-            date: fullDate,
-            rawDate: new Date().toISOString(), // For filtering
+            rawDate: new Date().toISOString(), 
             profit: profit.toFixed(2)
         });
         
-        localStorage.setItem('trade_history', JSON.stringify(history.slice(0, 50)));
+        localStorage.setItem('trade_history', JSON.stringify(history.slice(0, 100)));
         localStorage.setItem('bot_is_executing', 'false');
         window.dispatchEvent(new Event('storage'));
 
