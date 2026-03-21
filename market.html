@@ -177,14 +177,55 @@
         let displayData = [];
         let tvInitialized = false;
 
-        // UI sync for the Quant Execution balance display
-        window.addEventListener('storage', () => {
+        /* --- NEW: UI REFRESH LOGIC FOR PERMANENT HISTORY --- */
+        function refreshQuantUI() {
+            const log = document.getElementById('execution-log');
             const display = document.getElementById('balance-display');
-            const saved = localStorage.getItem('investmentBalance');
-            if (display && saved) {
-                display.innerText = "$" + parseFloat(saved).toLocaleString(undefined, {minimumFractionDigits: 2});
+            const history = JSON.parse(localStorage.getItem('trade_history')) || [];
+            const isExecuting = localStorage.getItem('bot_is_executing') === 'true';
+
+            // Update Balance Display
+            const savedBal = localStorage.getItem('investmentBalance');
+            if (display && savedBal) display.innerText = "$" + parseFloat(savedBal).toLocaleString(undefined, {minimumFractionDigits: 2});
+
+            if (!log) return;
+            log.innerHTML = ''; // Clear current view to rebuild
+
+            // 1. Show Active Trade Card if bot is currently trading
+            if (isExecuting) {
+                const side = localStorage.getItem('last_trade_side');
+                const price = localStorage.getItem('last_entry_price');
+                const activeCard = document.createElement('div');
+                activeCard.className = 'exec-card';
+                activeCard.style.borderLeftColor = side === 'LONG' ? 'var(--accent-green)' : 'var(--accent-red)';
+                activeCard.innerHTML = `
+                    <div class="exec-row">
+                        <span style="font-weight:bold;">BTC/USDT <span style="color:${side === 'LONG' ? 'var(--accent-green)' : 'var(--accent-red)'}">${side}</span></span>
+                        <span style="color:orange; font-weight:bold;">● EXECUTING</span>
+                    </div>
+                    <div class="exec-row"><span class="exec-label">Entry Price</span><span>$${price}</span></div>
+                `;
+                log.appendChild(activeCard);
             }
-        });
+
+            // 2. Rebuild History Cards from permanent memory
+            history.forEach(trade => {
+                const card = document.createElement('div');
+                card.className = 'exec-card';
+                card.style.borderLeftColor = trade.side === 'LONG' ? 'var(--accent-green)' : 'var(--accent-red)';
+                card.innerHTML = `
+                    <div class="exec-row">
+                        <span style="font-weight:bold;">BTC/USDT <span>${trade.side}</span></span>
+                        <span style="color:var(--text-grey); font-weight:bold;">● CLOSED</span>
+                    </div>
+                    <div class="exec-row"><span class="exec-label">Settled Profit</span><span class="profit-green">+$${trade.profit}</span></div>
+                `;
+                log.appendChild(card);
+            });
+        }
+
+        // Listen for storage changes from background bot.js
+        window.addEventListener('storage', refreshQuantUI);
 
         async function fetchMarketData() {
             try {
@@ -205,14 +246,13 @@
             document.getElementById('search-sec').style.display = 'none';
             document.getElementById('quant-view').style.display = 'block';
             
+            // Rebuild UI from memory on tab click
+            refreshQuantUI();
+
             if (!tvInitialized) {
                 initTradingView();
-                startTradeLogging(); // Start listening for REAL trades
                 tvInitialized = true;
             }
-            
-            const saved = localStorage.getItem('investmentBalance');
-            if (saved) document.getElementById('balance-display').innerText = "$" + parseFloat(saved).toLocaleString(undefined, {minimumFractionDigits: 2});
         }
 
         function initTradingView() {
@@ -228,53 +268,6 @@
                 "hide_top_toolbar": true,
                 "hide_legend": true,
                 "save_image": false
-            });
-        }
-
-        /* --- IMPROVED REAL TRADE LOGGING --- */
-        function startTradeLogging() {
-            const log = document.getElementById('execution-log');
-            
-            window.addEventListener('storage', () => {
-                const isExecuting = localStorage.getItem('bot_is_executing') === 'true';
-                const side = localStorage.getItem('last_trade_side');
-                const price = localStorage.getItem('last_entry_price');
-                const time = localStorage.getItem('last_entry_time');
-                const profit = localStorage.getItem('last_profit');
-
-                if (isExecuting) {
-                    // Prevent duplicate cards for the same active trade
-                    if (document.getElementById('active-trade')) return;
-                    
-                    const card = document.createElement('div');
-                    card.className = 'exec-card';
-                    card.id = 'active-trade';
-                    card.style.borderLeftColor = side === 'LONG' ? 'var(--accent-green)' : 'var(--accent-red)';
-                    card.innerHTML = `
-                        <div class="exec-row">
-                            <span style="font-weight:bold;">BTC/USDT <span style="color:${side === 'LONG' ? 'var(--accent-green)' : 'var(--accent-red)'}">${side}</span></span>
-                            <span style="color:orange; font-weight:bold;">● EXECUTING</span>
-                        </div>
-                        <div class="exec-row"><span class="exec-label">Entry Price</span><span>$${price}</span></div>
-                        <div class="exec-row"><span class="exec-label">Entry Time</span><span>${time}</span></div>
-                    `;
-                    log.prepend(card);
-                } else {
-                    // Trade just closed
-                    const activeCard = document.getElementById('active-trade');
-                    if (activeCard) {
-                        activeCard.id = ''; // Trade is finished, remove tracker ID
-                        activeCard.querySelector('span[style*="orange"]').innerHTML = '● CLOSED';
-                        activeCard.querySelector('span[style*="orange"]').style.color = 'var(--text-grey)';
-                        activeCard.innerHTML += `
-                            <div class="exec-row" style="margin-top:5px; border-top:1px solid #1a222d; padding-top:5px;">
-                                <span class="exec-label">Settled Profit</span>
-                                <span class="profit-green">+$${profit}</span>
-                            </div>
-                        `;
-                        if (log.children.length > 5) log.removeChild(log.lastChild);
-                    }
-                }
             });
         }
 
@@ -294,6 +287,7 @@
 
         function renderMarket() {
             const container = document.getElementById('market-list');
+            if(!container) return;
             container.innerHTML = '';
             displayData.forEach(coin => {
                 const price = coin.current_price.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
