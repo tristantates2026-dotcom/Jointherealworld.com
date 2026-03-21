@@ -177,7 +177,7 @@
         let displayData = [];
         let tvInitialized = false;
 
-        // 2. ADDED: UI sync for the Quant Execution tab
+        // UI sync for the Quant Execution balance display
         window.addEventListener('storage', () => {
             const display = document.getElementById('balance-display');
             const saved = localStorage.getItem('investmentBalance');
@@ -207,11 +207,10 @@
             
             if (!tvInitialized) {
                 initTradingView();
-                startTradeLogging();
+                startTradeLogging(); // Start listening for REAL trades
                 tvInitialized = true;
             }
             
-            // Set initial balance display
             const saved = localStorage.getItem('investmentBalance');
             if (saved) document.getElementById('balance-display').innerText = "$" + parseFloat(saved).toLocaleString(undefined, {minimumFractionDigits: 2});
         }
@@ -232,27 +231,51 @@
             });
         }
 
-        // Simulates the appearance of trades based on background bot actions
+        /* --- IMPROVED REAL TRADE LOGGING --- */
         function startTradeLogging() {
             const log = document.getElementById('execution-log');
-            setInterval(() => {
+            
+            window.addEventListener('storage', () => {
                 const isExecuting = localStorage.getItem('bot_is_executing') === 'true';
+                const side = localStorage.getItem('last_trade_side');
+                const price = localStorage.getItem('last_entry_price');
+                const time = localStorage.getItem('last_entry_time');
+                const profit = localStorage.getItem('last_profit');
+
                 if (isExecuting) {
-                    const time = new Date().toLocaleTimeString();
+                    // Prevent duplicate cards for the same active trade
+                    if (document.getElementById('active-trade')) return;
+                    
                     const card = document.createElement('div');
                     card.className = 'exec-card';
+                    card.id = 'active-trade';
+                    card.style.borderLeftColor = side === 'LONG' ? 'var(--accent-green)' : 'var(--accent-red)';
                     card.innerHTML = `
                         <div class="exec-row">
-                            <span style="font-weight:bold;">BTC/USDT <span style="color:var(--accent-green)">LONG</span></span>
-                            <span style="color:orange; font-weight:bold;">EXECUTING</span>
+                            <span style="font-weight:bold;">BTC/USDT <span style="color:${side === 'LONG' ? 'var(--accent-green)' : 'var(--accent-red)'}">${side}</span></span>
+                            <span style="color:orange; font-weight:bold;">● EXECUTING</span>
                         </div>
+                        <div class="exec-row"><span class="exec-label">Entry Price</span><span>$${price}</span></div>
                         <div class="exec-row"><span class="exec-label">Entry Time</span><span>${time}</span></div>
-                        <div class="exec-row"><span class="exec-label">Status</span><span>Scanning Profit...</span></div>
                     `;
                     log.prepend(card);
-                    if (log.children.length > 4) log.removeChild(log.lastChild);
+                } else {
+                    // Trade just closed
+                    const activeCard = document.getElementById('active-trade');
+                    if (activeCard) {
+                        activeCard.id = ''; // Trade is finished, remove tracker ID
+                        activeCard.querySelector('span[style*="orange"]').innerHTML = '● CLOSED';
+                        activeCard.querySelector('span[style*="orange"]').style.color = 'var(--text-grey)';
+                        activeCard.innerHTML += `
+                            <div class="exec-row" style="margin-top:5px; border-top:1px solid #1a222d; padding-top:5px;">
+                                <span class="exec-label">Settled Profit</span>
+                                <span class="profit-green">+$${profit}</span>
+                            </div>
+                        `;
+                        if (log.children.length > 5) log.removeChild(log.lastChild);
+                    }
                 }
-            }, 15000);
+            });
         }
 
         function filterMarket(type, tabEl) {
