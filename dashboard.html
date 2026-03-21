@@ -458,10 +458,20 @@
             });
         }
 
+        /* --- ADDED BALANCE SYNC LOGIC --- */
+        function syncBalance() {
+            const savedBalance = localStorage.getItem('investmentBalance');
+            if (savedBalance) {
+                document.getElementById('total-balance').innerText = "$" + parseFloat(savedBalance).toLocaleString(undefined, {minimumFractionDigits: 2});
+            }
+        }
+
         window.onload = () => {
             switchCategory('crypto');
             setInterval(updateTimeEngine, 1000);
             updateTimeEngine();
+            // Start real-time sync
+            setInterval(syncBalance, 1000);
         };
     </script>
 </body>

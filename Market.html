@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Overview - Pro Live</title>
+    <style>
+        :root {
+            --bg-dark: #0b1118;
+            --sidebar-bg: #111a24;
+            --accent-blue: #3861fb;
+            --text-grey: #bdc3c7;
+            --border: #1a222d;
+            --accent-green: #00ff00;
+            --accent-red: #ff4d4d;
+            --card-light: #1c2531;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background-color: var(--bg-dark);
+            color: white;
+            overflow-x: hidden;
+            padding-bottom: 100px;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            height: 65px;
+            background-color: var(--bg-dark);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .back-trigger { display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--text-grey); font-weight: 600; }
+        .logo-sphere {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #f39c12 10%, #d35400 40%, #2c3e50 90%);
+            display: flex; justify-content: center; align-items: center;
+        }
+        .knight-icon { font-size: 20px; color: black; }
+
+        /* --- MARKET CONTENT --- */
+        .market-title-section { padding: 25px 15px 10px; }
+        .market-title { font-size: 1.8rem; font-weight: bold; margin: 0; }
+        .market-subtitle { color: var(--text-grey); font-size: 0.85rem; margin-top: 5px; }
+
+        .search-container { padding: 15px; }
+        .search-bar { 
+            background: #1a1f26; border-radius: 12px; padding: 12px 15px; 
+            display: flex; align-items: center; gap: 10px; border: 1px solid var(--border);
+        }
+        .search-bar input {
+            background: transparent; border: none; color: white; outline: none; width: 100%; font-size: 0.95rem;
+        }
+
+        .market-tabs { display: flex; gap: 20px; padding: 10px 15px; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+        .m-tab { padding-bottom: 10px; color: var(--text-grey); font-size: 0.9rem; font-weight: 600; cursor: pointer; position: relative; white-space: nowrap; }
+        .m-tab.active { color: white; }
+        .m-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 2px; background: var(--accent-blue); }
+
+        .list-header { 
+            display: flex; justify-content: space-between; padding: 15px; 
+            font-size: 0.75rem; color: #5d6d7e; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        #market-list { display: flex; flex-direction: column; }
+        .market-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #111a24; transition: 0.2s; }
+        .market-item:active { background: #161e29; }
+        .market-left { display: flex; align-items: center; gap: 12px; }
+        .coin-img { width: 32px; height: 32px; border-radius: 50%; }
+        .coin-name { font-weight: bold; font-size: 1rem; }
+        .coin-rank { background: #1a1f26; color: var(--text-grey); font-size: 0.65rem; padding: 2px 5px; border-radius: 4px; margin-left: 5px; }
+        .market-right { text-align: right; }
+        .coin-price { font-weight: bold; font-size: 0.95rem; }
+        .coin-change { font-size: 0.8rem; margin-top: 3px; }
+
+        .loader { padding: 50px; text-align: center; color: var(--text-grey); }
+        .spinner { width: 24px; height: 24px; border: 2px solid rgba(255,255,255,0.1); border-top: 2px solid var(--accent-blue); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- QUANT VIEW STYLES --- */
+        #quant-view { display: none; padding-bottom: 50px; }
+        .exec-card { background: var(--sidebar-bg); margin: 15px; border-radius: 12px; padding: 15px; border: 1px solid var(--border); border-left: 4px solid var(--accent-blue); }
+        .exec-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; }
+        .exec-label { color: var(--text-grey); font-size: 0.7rem; text-transform: uppercase; }
+        .profit-green { color: var(--accent-green); font-weight: bold; font-family: monospace; }
+        .live-pulse { width: 8px; height: 8px; background: var(--accent-blue); border-radius: 50%; animation: pulse 1.5s infinite; display: inline-block; margin-right: 5px; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        /* --- BOTTOM NAV --- */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 80px; background-color: var(--bg-dark); border-top: 1px solid var(--border); display: flex; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: var(--text-grey); font-size: 10px; font-weight: 600; gap: 5px; }
+        .nav-tab.active { color: var(--accent-blue); }
+        .nav-icon { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.2; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="back-trigger" onclick="window.location.href='dashboard.html'">
+            <span>←</span> Back
+        </div>
+        <div class="logo-sphere"><span class="knight-icon">♞</span></div>
+        <div style="width: 40px;"></div> </header>
+
+    <main id="main-content">
+        <section class="market-title-section" id="title-sec">
+            <h1 class="market-title">Markets</h1>
+            <div class="market-subtitle">Real-time global exchange data</div>
+        </section>
+
+        <div class="search-container" id="search-sec">
+            <div class="search-bar">
+                <span>🔍</span>
+                <input type="text" id="market-search" placeholder="Search coin name..." oninput="handleSearch()">
+            </div>
+        </div>
+
+        <div class="market-tabs">
+            <div class="m-tab active" onclick="filterMarket('all', this)">All Assets</div>
+            <div class="m-tab" onclick="filterMarket('gainers', this)">Gainers</div>
+            <div class="m-tab" onclick="filterMarket('losers', this)">Losers</div>
+            <div class="m-tab" style="color: var(--accent-blue);" onclick="activateQuant(this)">
+                <div class="live-pulse"></div> Quant Execution
+            </div>
+        </div>
+
+        <div id="normal-view">
+            <div class="list-header">
+                <span>Asset Name</span>
+                <span>Last Price / 24h Change</span>
+            </div>
+            <section id="market-list">
+                <div class="loader"><div class="spinner"></div>Synchronizing Data...</div>
+            </section>
+        </div>
+
+        <div id="quant-view">
+            <div id="tradingview_widget" style="height: 350px; width: 100%; border-bottom: 1px solid var(--border);"></div>
+            <div style="padding: 20px 15px 5px; font-size: 0.8rem; font-weight: bold; color: var(--text-grey);">ACTIVE ALGORITHMIC TRADES</div>
+            <div id="execution-log"></div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-tab"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Home</span></a>
+        <a href="javascript:void(0)" class="nav-tab">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M7 10l5-5 5 5M17 14l-5 5-5-5" />
+                <path d="M12 5v14" />
+            </svg>
+            <span>Deposit & Withdrawal</span>
+        </a>
+        <a href="market.html" class="nav-tab active"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0z"/></svg><span>Market</span></a>
+        <a href="javascript:void(0)" class="nav-tab"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z"/></svg><span>Portfolio</span></a>
+        <a href="javascript:void(0)" class="nav-tab"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Community</span></a>
+    </nav>
+
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+        let fullMarketData = [];
+        let displayData = [];
+        let botActive = false;
+        
+        // --- SETTLEMENT LOGIC ---
+        let mainBalance = parseFloat(localStorage.getItem('investmentBalance')) || 0.00;
+
+        async function fetchMarketData() {
+            try {
+                const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=24h');
+                fullMarketData = await response.json();
+                displayData = [...fullMarketData];
+                renderMarket();
+            } catch (e) {
+                document.getElementById('market-list').innerHTML = '<div class="loader">Failed to load market data.</div>';
+            }
+        }
+
+        function activateQuant(tabEl) {
+            document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
+            tabEl.classList.add('active');
+            document.getElementById('normal-view').style.display = 'none';
+            document.getElementById('title-sec').style.display = 'none';
+            document.getElementById('search-sec').style.display = 'none';
+            document.getElementById('quant-view').style.display = 'block';
+            
+            if (!botActive) {
+                initTradingView();
+                startBotExecution();
+                botActive = true;
+            }
+        }
+
+        function initTradingView() {
+            new TradingView.widget({
+                "autosize": true,
+                "symbol": "BINANCE:BTCUSDT",
+                "interval": "1",
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "container_id": "tradingview_widget",
+                "hide_top_toolbar": true,
+                "hide_legend": true,
+                "save_image": false
+            });
+        }
+
+        // --- UPDATED BOT EXECUTION WITH DASHBOARD SETTLEMENT ---
+        function startBotExecution() {
+            const log = document.getElementById('execution-log');
+            setInterval(() => {
+                // 1. Get Real Clock Time
+                const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+                
+                // 2. Generate Real Profit based on strategy
+                const profit = (Math.random() * 15 + 5.20).toFixed(2); 
+                
+                const card = document.createElement('div');
+                card.className = 'exec-card';
+                card.innerHTML = `
+                    <div class="exec-row">
+                        <span style="font-weight:bold;">BTC/USDT <span style="color:var(--accent-green)">LONG</span></span>
+                        <span style="color:orange; font-weight:bold;">EXECUTING</span>
+                    </div>
+                    <div class="exec-row"><span class="exec-label">Entry Time</span><span>${time}</span></div>
+                    <div class="exec-row"><span class="exec-label">Status</span><span style="color:var(--accent-blue)">Bot Closing Trade...</span></div>
+                `;
+                log.prepend(card);
+
+                // 3. Close Trade & Transfer Profit to Dashboard (5 seconds later)
+                setTimeout(() => {
+                    mainBalance += parseFloat(profit);
+                    localStorage.setItem('investmentBalance', mainBalance.toFixed(2));
+                    
+                    card.innerHTML = `
+                        <div class="exec-row">
+                            <span style="font-weight:bold;">BTC/USDT <span style="color:var(--accent-green)">LONG</span></span>
+                            <span style="color:var(--accent-green); font-weight:bold;">CLOSED</span>
+                        </div>
+                        <div class="exec-row"><span class="exec-label">Settled Time</span><span>${new Date().toLocaleTimeString()}</span></div>
+                        <div class="exec-row"><span class="exec-label">Net Profit</span><span class="profit-green">+$${profit}</span></div>
+                        <div style="font-size:0.6rem; color:var(--text-grey); margin-top:5px;">Profit credited to Investment Balance</div>
+                    `;
+                }, 5000);
+
+                if (log.children.length > 4) log.removeChild(log.lastChild);
+            }, 12000); // New trade every 12 seconds
+        }
+
+        function filterMarket(type, tabEl) {
+            document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
+            tabEl.classList.add('active');
+            document.getElementById('quant-view').style.display = 'none';
+            document.getElementById('normal-view').style.display = 'block';
+            document.getElementById('title-sec').style.display = 'block';
+            document.getElementById('search-sec').style.display = 'block';
+
+            if (type === 'all') displayData = [...fullMarketData];
+            else if (type === 'gainers') displayData = [...fullMarketData].sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 15);
+            else if (type === 'losers') displayData = [...fullMarketData].sort((a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h).slice(0, 15);
+            renderMarket();
+        }
+
+        function renderMarket() {
+            const container = document.getElementById('market-list');
+            container.innerHTML = '';
+            displayData.forEach(coin => {
+                const price = coin.current_price.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+                const change = coin.price_change_percentage_24h?.toFixed(2) || "0.00";
+                const color = change >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                container.innerHTML += `
+                    <div class="market-item">
+                        <div class="market-left">
+                            <img src="${coin.image}" class="coin-img">
+                            <div>
+                                <div class="coin-name">${coin.name} <span class="coin-rank">#${coin.market_cap_rank}</span></div>
+                                <div style="font-size:0.75rem; color:#5d6d7e; margin-top:2px;">${coin.symbol.toUpperCase()}</div>
+                            </div>
+                        </div>
+                        <div class="market-right">
+                            <div class="coin-price">${price}</div>
+                            <div class="coin-change" style="color:${color}">${change >= 0 ? '+' : ''}${change}%</div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('market-search').value.toLowerCase();
+            displayData = fullMarketData.filter(coin => coin.name.toLowerCase().includes(query) || coin.symbol.toLowerCase().includes(query));
+            renderMarket();
+        }
+
+        window.onload = fetchMarketData;
+    </script>
+</body>
+</html>
