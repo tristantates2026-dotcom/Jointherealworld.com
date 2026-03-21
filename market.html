@@ -105,7 +105,7 @@
 <body>
 
     <header class="header">
-        <div class="back-trigger" onclick="window.location.href='dashboard.html'">
+        <div class="back-trigger" onclick="window.location.href='index.html'">
             <span>←</span> Back
         </div>
         <div class="logo-sphere"><span class="knight-icon">♞</span></div>
@@ -144,14 +144,19 @@
         </div>
 
         <div id="quant-view">
-            <div id="tradingview_widget" style="height: 350px; width: 100%; border-bottom: 1px solid var(--border);"></div>
+            <div style="padding: 20px 15px 0;">
+                <div style="font-size: 0.7rem; color: var(--text-grey); text-transform: uppercase;">Current Strategy Equity</div>
+                <div id="balance-display" style="font-size: 2rem; font-weight: bold; margin-top: 5px;">$799.00</div>
+            </div>
+            
+            <div id="tradingview_widget" style="height: 350px; width: 100%; border-bottom: 1px solid var(--border); margin-top: 15px;"></div>
             <div style="padding: 20px 15px 5px; font-size: 0.8rem; font-weight: bold; color: var(--text-grey);">ACTIVE ALGORITHMIC TRADES</div>
             <div id="execution-log"></div>
         </div>
     </main>
 
     <nav class="bottom-nav">
-        <a href="dashboard.html" class="nav-tab"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Home</span></a>
+        <a href="index.html" class="nav-tab"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Home</span></a>
         <a href="javascript:void(0)" class="nav-tab">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M7 10l5-5 5 5M17 14l-5 5-5-5" />
@@ -164,14 +169,22 @@
         <a href="javascript:void(0)" class="nav-tab"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Community</span></a>
     </nav>
 
+    <script src="bot.js"></script>
+
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
         let fullMarketData = [];
         let displayData = [];
-        let botActive = false;
-        
-        // --- SETTLEMENT LOGIC ---
-        let mainBalance = parseFloat(localStorage.getItem('investmentBalance')) || 0.00;
+        let tvInitialized = false;
+
+        // 2. ADDED: UI sync for the Quant Execution tab
+        window.addEventListener('storage', () => {
+            const display = document.getElementById('balance-display');
+            const saved = localStorage.getItem('investmentBalance');
+            if (display && saved) {
+                display.innerText = "$" + parseFloat(saved).toLocaleString(undefined, {minimumFractionDigits: 2});
+            }
+        });
 
         async function fetchMarketData() {
             try {
@@ -192,11 +205,15 @@
             document.getElementById('search-sec').style.display = 'none';
             document.getElementById('quant-view').style.display = 'block';
             
-            if (!botActive) {
+            if (!tvInitialized) {
                 initTradingView();
-                startBotExecution();
-                botActive = true;
+                startTradeLogging();
+                tvInitialized = true;
             }
+            
+            // Set initial balance display
+            const saved = localStorage.getItem('investmentBalance');
+            if (saved) document.getElementById('balance-display').innerText = "$" + parseFloat(saved).toLocaleString(undefined, {minimumFractionDigits: 2});
         }
 
         function initTradingView() {
@@ -215,46 +232,27 @@
             });
         }
 
-        // --- UPDATED BOT EXECUTION WITH DASHBOARD SETTLEMENT ---
-        function startBotExecution() {
+        // Simulates the appearance of trades based on background bot actions
+        function startTradeLogging() {
             const log = document.getElementById('execution-log');
             setInterval(() => {
-                // 1. Get Real Clock Time
-                const time = new Date().toLocaleTimeString('en-US', { hour12: false });
-                
-                // 2. Generate Real Profit based on strategy
-                const profit = (Math.random() * 15 + 5.20).toFixed(2); 
-                
-                const card = document.createElement('div');
-                card.className = 'exec-card';
-                card.innerHTML = `
-                    <div class="exec-row">
-                        <span style="font-weight:bold;">BTC/USDT <span style="color:var(--accent-green)">LONG</span></span>
-                        <span style="color:orange; font-weight:bold;">EXECUTING</span>
-                    </div>
-                    <div class="exec-row"><span class="exec-label">Entry Time</span><span>${time}</span></div>
-                    <div class="exec-row"><span class="exec-label">Status</span><span style="color:var(--accent-blue)">Bot Closing Trade...</span></div>
-                `;
-                log.prepend(card);
-
-                // 3. Close Trade & Transfer Profit to Dashboard (5 seconds later)
-                setTimeout(() => {
-                    mainBalance += parseFloat(profit);
-                    localStorage.setItem('investmentBalance', mainBalance.toFixed(2));
-                    
+                const isExecuting = localStorage.getItem('bot_is_executing') === 'true';
+                if (isExecuting) {
+                    const time = new Date().toLocaleTimeString();
+                    const card = document.createElement('div');
+                    card.className = 'exec-card';
                     card.innerHTML = `
                         <div class="exec-row">
                             <span style="font-weight:bold;">BTC/USDT <span style="color:var(--accent-green)">LONG</span></span>
-                            <span style="color:var(--accent-green); font-weight:bold;">CLOSED</span>
+                            <span style="color:orange; font-weight:bold;">EXECUTING</span>
                         </div>
-                        <div class="exec-row"><span class="exec-label">Settled Time</span><span>${new Date().toLocaleTimeString()}</span></div>
-                        <div class="exec-row"><span class="exec-label">Net Profit</span><span class="profit-green">+$${profit}</span></div>
-                        <div style="font-size:0.6rem; color:var(--text-grey); margin-top:5px;">Profit credited to Investment Balance</div>
+                        <div class="exec-row"><span class="exec-label">Entry Time</span><span>${time}</span></div>
+                        <div class="exec-row"><span class="exec-label">Status</span><span>Scanning Profit...</span></div>
                     `;
-                }, 5000);
-
-                if (log.children.length > 4) log.removeChild(log.lastChild);
-            }, 12000); // New trade every 12 seconds
+                    log.prepend(card);
+                    if (log.children.length > 4) log.removeChild(log.lastChild);
+                }
+            }, 15000);
         }
 
         function filterMarket(type, tabEl) {
