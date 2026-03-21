@@ -156,7 +156,7 @@
     </main>
 
     <nav class="bottom-nav">
-        <a href="index.html" class="nav-tab"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2-0 0 1-2-2z"/></svg><span>Home</span></a>
+        <a href="index.html" class="nav-tab"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Home</span></a>
         <a href="javascript:void(0)" class="nav-tab">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M7 10l5-5 5 5M17 14l-5 5-5-5" />
@@ -177,7 +177,7 @@
         let displayData = [];
         let tvInitialized = false;
 
-        /* --- UPDATED: REFRESH LOGIC WITH ENTRY PRICE AND TIME --- */
+        /* --- UPDATED: REFRESH LOGIC WITH STATEMENT AND OPEN/CLOSE TIMES --- */
         function refreshQuantUI() {
             const log = document.getElementById('execution-log');
             const display = document.getElementById('balance-display');
@@ -189,13 +189,13 @@
             if (display && savedBal) display.innerText = "$" + parseFloat(savedBal).toLocaleString(undefined, {minimumFractionDigits: 2});
 
             if (!log) return;
-            log.innerHTML = ''; // Clear current view to rebuild
+            log.innerHTML = ''; // Clear view to rebuild statement
 
-            // 1. Show LIVE Active Trade with Price and Time
+            // 1. Show LIVE Active Trade
             if (isExecuting) {
                 const side = localStorage.getItem('last_trade_side');
                 const price = localStorage.getItem('last_entry_price');
-                const time = localStorage.getItem('last_entry_time');
+                const openTime = localStorage.getItem('last_open_time');
                 
                 const activeCard = document.createElement('div');
                 activeCard.className = 'exec-card';
@@ -206,23 +206,27 @@
                         <span style="color:orange; font-weight:bold;">● EXECUTING</span>
                     </div>
                     <div class="exec-row"><span class="exec-label">Entry Price</span><span>$${price}</span></div>
-                    <div class="exec-row"><span class="exec-label">Time</span><span>${time}</span></div>
+                    <div class="exec-row"><span class="exec-label">Open Time</span><span>${openTime}</span></div>
                 `;
                 log.appendChild(activeCard);
             }
 
-            // 2. Build History from Permanent Storage with detailed entry data
+            // 2. Build Detailed Trade Statement
             history.forEach(trade => {
                 const card = document.createElement('div');
                 card.className = 'exec-card';
                 card.style.borderLeftColor = trade.side === 'LONG' ? 'var(--accent-green)' : 'var(--accent-red)';
                 card.innerHTML = `
                     <div class="exec-row">
-                        <span style="font-weight:bold;">BTC/USDT <span>${trade.side}</span></span>
+                        <span style="font-weight:bold;">BTC/USDT <span style="color:${trade.side === 'LONG' ? 'var(--accent-green)' : 'var(--accent-red)'}">${trade.side}</span></span>
                         <span style="color:var(--text-grey); font-weight:bold;">● CLOSED</span>
                     </div>
                     <div class="exec-row"><span class="exec-label">Entry Price</span><span>$${trade.entryPrice}</span></div>
-                    <div class="exec-row"><span class="exec-label">Net Profit</span><span class="profit-green">+$${trade.profit}</span></div>
+                    <div class="exec-row"><span class="exec-label">Open / Close</span><span>${trade.openTime} - ${trade.closeTime}</span></div>
+                    <div class="exec-row" style="margin-top:5px; border-top:1px solid #1a222d; padding-top:5px;">
+                        <span class="exec-label">Net Statement Profit</span>
+                        <span class="profit-green">+$${trade.profit}</span>
+                    </div>
                 `;
                 log.appendChild(card);
             });
