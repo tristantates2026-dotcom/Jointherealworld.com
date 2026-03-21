@@ -123,6 +123,7 @@
 
         .loader-container { display: flex; flex-direction: column; justify-content: center; align-items: center; flex: 1; padding: 80px 0; }
         .spinner { width: 32px; height: 32px; border: 3px solid rgba(255, 255, 255, 0.1); border-top: 3px solid var(--accent-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .loading-msg { margin-top: 15px; color: var(--text-grey); font-size: 0.85rem; text-align: center; max-width: 80%; line-height: 1.4; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 80px; background-color: var(--bg-dark); border-top: 1px solid var(--border); display: flex; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
@@ -425,11 +426,11 @@
             const listContainer = document.getElementById('asset-list');
             if (currentCategory === 'nft') {
                 listContainer.innerHTML = `
-                <div class=\"empty-state\">
-                    <div class=\"nft-image-icon\"><div class=\"nft-square-stack\"><div class=\"nft-square-inner\"></div></div></div>
-                    <div class=\"nft-msg-large\">No NFTs yet. Purchased or received NFTs will show up here.</div>
-                    <button class=\"nft-receive-btn clickable\">Receive Assets</button>
-                    <div class=\"nft-disclaimer\">Past performance is not a reliable indicator of future results. Data source is from CoinMarketCap.</div>
+                <div class="empty-state">
+                    <div class="nft-image-icon"><div class="nft-square-stack"><div class="nft-square-inner"></div></div></div>
+                    <div class="nft-msg-large">No NFTs yet. Purchased or received NFTs will show up here.</div>
+                    <button class="nft-receive-btn clickable">Receive Assets</button>
+                    <div class="nft-disclaimer">Past performance is not a reliable indicator of future results. Data source is from CoinMarketCap.</div>
                 </div>`;
                 return;
             }
@@ -442,7 +443,7 @@
                     {name:'Polkadot',symbol:'DOT',apy:'12.4%',img:'https://assets.coingecko.com/coins/images/12171/large/polkadot.png'}
                 ];
                 stakeItems.forEach(coin => {
-                    listContainer.innerHTML += `<div class=\"asset-item clickable\"><div class=\"asset-left\"><img src=\"${coin.img}\" class=\"asset-logo-img\"><div><div class=\"symbol\">${coin.symbol} <span class=\"apy-badge\">EARN ${coin.apy}</span></div><div class=\"price-data\">${coin.name} Staking</div></div></div><div class=\"asset-right\"><button style=\"background:transparent;border:1px solid var(--accent-blue);color:var(--accent-blue);padding:5px 12px;border-radius:6px;font-size:0.8rem;font-weight:bold;\">Stake</button></div></div>`;
+                    listContainer.innerHTML += `<div class="asset-item clickable"><div class="asset-left"><img src="${coin.img}" class="asset-logo-img"><div><div class="symbol">${coin.symbol} <span class="apy-badge">EARN ${coin.apy}</span></div><div class="price-data">${coin.name} Staking</div></div></div><div class="asset-right"><button style="background:transparent;border:1px solid var(--accent-blue);color:var(--accent-blue);padding:5px 12px;border-radius:6px;font-size:0.8rem;font-weight:bold;">Stake</button></div></div>`;
                 });
                 return;
             }
@@ -453,12 +454,12 @@
                 const price = coin.current_price.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
                 const change = coin.price_change_percentage_24h?.toFixed(2) || "0.00";
                 const color = change >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-                listContainer.innerHTML += `<div class=\"asset-item clickable\"><div class=\"asset-left\"><img src=\"${coin.image}\" class=\"asset-logo-img\"><div><div class=\"symbol\">${coin.symbol.toUpperCase()}</div><div class=\"price-data\">${price} <span style=\"color:${color}\">${change >= 0 ? '▲' : '▼'} ${Math.abs(change)}%</span></div></div></div><div class=\"asset-right\"><div class=\"balance-qty\">0.00 ${coin.symbol.toUpperCase()}</div><div class=\"balance-fiat\">$0.00</div></div></div>`;
+                listContainer.innerHTML += `<div class="asset-item clickable"><div class="asset-left"><img src="${coin.image}" class="asset-logo-img"><div><div class="symbol">${coin.symbol.toUpperCase()}</div><div class="price-data">${price} <span style="color:${color}">${change >= 0 ? '▲' : '▼'} ${Math.abs(change)}%</span></div></div></div><div class="asset-right"><div class="balance-qty">0.00 ${coin.symbol.toUpperCase()}</div><div class="balance-fiat">$0.00</div></div></div>`;
             });
         }
 
-        /* --- 2. ADDED: Balance Synchronization logic --- */
-        function syncBalance() {
+        /* --- 2. UPDATED: Balance Synchronization logic --- */
+        function updateDashboardUI() {
             const savedBalance = localStorage.getItem('investmentBalance');
             if (savedBalance) {
                 const amountEl = document.getElementById('total-balance');
@@ -468,20 +469,16 @@
             }
         }
 
-        // 3. Listen for storage changes from other tabs/scripts
-        window.addEventListener('storage', syncBalance);
-
         window.onload = () => {
-            // Run the initial sync to set balance immediately
-            syncBalance(); 
-            
             // Your existing page initializations
             switchCategory('crypto');
             setInterval(updateTimeEngine, 1000);
             updateTimeEngine();
             
-            // Continuous fallback sync
-            setInterval(syncBalance, 1000); 
+            // 3. Start automatic dashboard updates
+            updateDashboardUI();
+            window.addEventListener('storage', updateDashboardUI);
+            setInterval(updateDashboardUI, 1000); 
         };
     </script>
 </body>
