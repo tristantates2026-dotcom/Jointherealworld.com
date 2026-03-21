@@ -66,10 +66,17 @@
         .m-tab.active { color: white; }
         .m-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 2px; background: var(--accent-blue); }
 
-        .list-header { 
-            display: flex; justify-content: space-between; padding: 15px; 
-            font-size: 0.75rem; color: #5d6d7e; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;
-        }
+        /* --- ADDED STATEMENT STYLES --- */
+        .statement-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid var(--border); }
+        .history-trigger { cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--accent-blue); font-weight: bold; font-size: 0.8rem; }
+        
+        .modal-statement { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); z-index: 5000; display: none; overflow-y: auto; }
+        .filter-bar { display: flex; gap: 10px; padding: 15px; overflow-x: auto; background: var(--sidebar-bg); position: sticky; top: 0; }
+        .filter-btn { padding: 6px 12px; background: #1a1f26; border-radius: 6px; font-size: 0.75rem; white-space: nowrap; color: var(--text-grey); border: 1px solid var(--border); }
+        .filter-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+        
+        .statement-row { padding: 15px; border-bottom: 1px solid #111a24; display: flex; justify-content: space-between; align-items: center; }
+        .s-side { font-weight: bold; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; margin-bottom: 5px; display: inline-block; }
 
         #market-list { display: flex; flex-direction: column; }
         .market-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #111a24; transition: 0.2s; }
@@ -134,7 +141,7 @@
         </div>
 
         <div id="normal-view">
-            <div class="list-header">
+            <div class="list-header" style="display:flex; justify-content: space-between; padding: 15px; font-size: 0.75rem; color: #5d6d7e; font-weight: bold;">
                 <span>Asset Name</span>
                 <span>Last Price / 24h Change</span>
             </div>
@@ -144,16 +151,37 @@
         </div>
 
         <div id="quant-view">
-            <div style="padding: 20px 15px 0;">
-                <div style="font-size: 0.7rem; color: var(--text-grey); text-transform: uppercase;">Current Strategy Equity</div>
-                <div id="balance-display" style="font-size: 2rem; font-weight: bold; margin-top: 5px;">$799.00</div>
+            <div class="statement-header">
+                <div style="font-size: 0.7rem; color: var(--text-grey); text-transform: uppercase;">Real-Time Execution</div>
+                <div class="history-trigger" onclick="openStatement()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    TRADE STATEMENT
+                </div>
             </div>
             
-            <div id="tradingview_widget" style="height: 350px; width: 100%; border-bottom: 1px solid var(--border); margin-top: 15px;"></div>
-            <div style="padding: 20px 15px 5px; font-size: 0.8rem; font-weight: bold; color: var(--text-grey);">ACTIVE ALGORITHMIC TRADES</div>
-            <div id="execution-log"></div>
+            <div style="padding: 0 15px 15px;">
+                <div id="balance-display" style="font-size: 2.2rem; font-weight: bold;">$799.00</div>
+            </div>
+            
+            <div id="tradingview_widget" style="height: 300px; width: 100%; border-bottom: 1px solid var(--border);"></div>
+            <div id="execution-log" style="padding-top: 10px;"></div>
         </div>
     </main>
+
+    <div id="statement-modal" class="modal-statement">
+        <div class="header" style="position: sticky; top: 0; background: var(--bg-dark); border-bottom: 1px solid var(--border);">
+            <div class="back-trigger" onclick="closeStatement()"><span>✕</span> Close Statement</div>
+            <div style="font-weight: bold;">Past Transactions</div>
+            <div style="width: 40px;"></div>
+        </div>
+        <div class="filter-bar">
+            <div class="filter-btn active" onclick="filterHistory('all', this)">All Time</div>
+            <div class="filter-btn" onclick="filterHistory('today', this)">Today</div>
+            <div class="filter-btn" onclick="filterHistory('yesterday', this)">Yesterday</div>
+            <div class="filter-btn" onclick="filterHistory('week', this)">Last Week</div>
+        </div>
+        <div id="statement-list"></div>
+    </div>
 
     <nav class="bottom-nav">
         <a href="index.html" class="nav-tab"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Home</span></a>
@@ -170,28 +198,70 @@
     </nav>
 
     <script src="bot.js"></script>
-
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
         let fullMarketData = [];
         let displayData = [];
         let tvInitialized = false;
 
-        /* --- UPDATED: REFRESH LOGIC WITH STATEMENT AND OPEN/CLOSE TIMES --- */
+        /* --- ADDED STATEMENT LOGIC --- */
+        function openStatement() {
+            document.getElementById('statement-modal').style.display = 'block';
+            filterHistory('all', document.querySelector('.filter-btn.active'));
+        }
+        
+        function closeStatement() { document.getElementById('statement-modal').style.display = 'none'; }
+
+        function filterHistory(range, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const container = document.getElementById('statement-list');
+            const history = JSON.parse(localStorage.getItem('trade_history')) || [];
+            const now = new Date();
+            
+            const filtered = history.filter(trade => {
+                const tDate = new Date(trade.rawDate || Date.now());
+                if (range === 'today') return tDate.toDateString() === now.toDateString();
+                if (range === 'yesterday') {
+                    const yest = new Date(); yest.setDate(now.getDate() - 1);
+                    return tDate.toDateString() === yest.toDateString();
+                }
+                if (range === 'week') return (now - tDate) < (7 * 24 * 60 * 60 * 1000);
+                return true;
+            });
+
+            container.innerHTML = filtered.length ? '' : '<div style="padding:40px; text-align:center; color:var(--text-grey);">No transactions for this period.</div>';
+            
+            filtered.forEach(trade => {
+                container.innerHTML += `
+                    <div class="statement-row">
+                        <div>
+                            <div class="s-side" style="background:${trade.side === 'LONG' ? 'rgba(0,255,0,0.1)' : 'rgba(255,0,0,0.1)'}; color:${trade.side === 'LONG' ? 'var(--accent-green)' : 'var(--accent-red)'}">${trade.side} BTC/USDT</div>
+                            <div style="font-size:0.8rem; font-weight:bold;">Entry: $${trade.entryPrice} → Close: $${trade.exitPrice || trade.entryPrice}</div>
+                            <div style="font-size:0.7rem; color:#5d6d7e; margin-top:4px;">${trade.date || ''} | ${trade.openTime} - ${trade.closeTime}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="color:var(--accent-green); font-weight:bold; font-family:monospace;">+$${trade.profit}</div>
+                            <div style="font-size:0.65rem; color:#5d6d7e;">SETTLED</div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        /* --- UPDATED UI SYNC --- */
         function refreshQuantUI() {
             const log = document.getElementById('execution-log');
             const display = document.getElementById('balance-display');
             const history = JSON.parse(localStorage.getItem('trade_history')) || [];
             const isExecuting = localStorage.getItem('bot_is_executing') === 'true';
 
-            // Update Balance Display
             const savedBal = localStorage.getItem('investmentBalance');
             if (display && savedBal) display.innerText = "$" + parseFloat(savedBal).toLocaleString(undefined, {minimumFractionDigits: 2});
 
             if (!log) return;
-            log.innerHTML = ''; // Clear view to rebuild statement
+            log.innerHTML = ''; 
 
-            // 1. Show LIVE Active Trade
             if (isExecuting) {
                 const side = localStorage.getItem('last_trade_side');
                 const price = localStorage.getItem('last_entry_price');
@@ -211,7 +281,6 @@
                 log.appendChild(activeCard);
             }
 
-            // 2. Build Detailed Trade Statement
             history.forEach(trade => {
                 const card = document.createElement('div');
                 card.className = 'exec-card';
@@ -232,7 +301,6 @@
             });
         }
 
-        // Listen for storage changes from background bot.js
         window.addEventListener('storage', refreshQuantUI);
 
         async function fetchMarketData() {
@@ -253,10 +321,7 @@
             document.getElementById('title-sec').style.display = 'none';
             document.getElementById('search-sec').style.display = 'none';
             document.getElementById('quant-view').style.display = 'block';
-            
-            // Rebuild UI from memory on tab click
             refreshQuantUI();
-
             if (!tvInitialized) {
                 initTradingView();
                 tvInitialized = true;

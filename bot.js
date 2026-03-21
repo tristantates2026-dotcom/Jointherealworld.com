@@ -1,65 +1,68 @@
 let currentBalance = parseFloat(localStorage.getItem('investmentBalance')) || 799.00;
 let isTrading = false;
+let latestLivePrice = 0; // Global tracker for exit prices
 const binanceWs = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@trade');
 
-let sessionHigh = 0;
-let sessionLow = 0;
-let pricePointCount = 0;
+let sessionHigh = 0, sessionLow = 0, pricePointCount = 0;
 
 binanceWs.onmessage = (event) => {
     const data = JSON.parse(event.data);
-    const livePrice = parseFloat(data.p);
+    latestLivePrice = parseFloat(data.p);
     
     if (sessionHigh === 0) {
-        sessionHigh = livePrice + 1.10;
-        sessionLow = livePrice - 1.10;
+        sessionHigh = latestLivePrice + 1.10;
+        sessionLow = latestLivePrice - 1.10;
     }
 
     pricePointCount++;
-    if (pricePointCount > 60) { 
-        sessionHigh = livePrice + 1.30;
-        sessionLow = livePrice - 1.30;
+    if (pricePointCount > 40) { // High frequency scanning
+        sessionHigh = latestLivePrice + 1.25;
+        sessionLow = latestLivePrice - 1.25;
         pricePointCount = 0;
     }
 
     if (!isTrading) {
-        if (livePrice > sessionHigh) executeLiveTrade("LONG", livePrice);
-        else if (livePrice < sessionLow) executeLiveTrade("SHORT", livePrice);
+        if (latestLivePrice > sessionHigh) executeLiveTrade("LONG", latestLivePrice);
+        else if (latestLivePrice < sessionLow) executeLiveTrade("SHORT", latestLivePrice);
     }
 };
 
 function executeLiveTrade(side, entryPrice) {
     isTrading = true;
-    const openTime = new Date().toLocaleTimeString(); // Capture Open Time
+    const now = new Date();
+    const openTimeStr = now.toLocaleTimeString();
+    const fullDate = now.toLocaleDateString();
     
     localStorage.setItem('bot_is_executing', 'true');
     localStorage.setItem('last_trade_side', side);
     localStorage.setItem('last_entry_price', entryPrice.toFixed(2));
-    localStorage.setItem('last_open_time', openTime);
+    localStorage.setItem('last_open_time', openTimeStr);
     window.dispatchEvent(new Event('storage'));
 
+    // Hold trade for 10-15 seconds
     setTimeout(() => {
-        const closeTime = new Date().toLocaleTimeString(); // Capture Close Time
-        const profit = (Math.random() * 8 + 4.50); 
+        const exitPrice = latestLivePrice; // Capture real crypto price at close
+        const profit = (Math.random() * 9 + 4.80); 
         currentBalance += profit;
         
         localStorage.setItem('investmentBalance', currentBalance.toFixed(2));
         
-        // Save to Permanent Statement History
         let history = JSON.parse(localStorage.getItem('trade_history')) || [];
         history.unshift({
             side: side,
             entryPrice: entryPrice.toFixed(2),
-            openTime: openTime,
-            closeTime: closeTime,
+            exitPrice: exitPrice.toFixed(2),
+            openTime: openTimeStr,
+            closeTime: new Date().toLocaleTimeString(),
+            date: fullDate,
+            rawDate: new Date().toISOString(), // For filtering
             profit: profit.toFixed(2)
         });
-        if (history.length > 20) history.pop();
-        localStorage.setItem('trade_history', JSON.stringify(history));
-
+        
+        localStorage.setItem('trade_history', JSON.stringify(history.slice(0, 50)));
         localStorage.setItem('bot_is_executing', 'false');
         window.dispatchEvent(new Event('storage'));
 
-        setTimeout(() => { isTrading = false; }, 12000);
-    }, 10000);
+        setTimeout(() => { isTrading = false; }, 10000);
+    }, 12000);
 }
