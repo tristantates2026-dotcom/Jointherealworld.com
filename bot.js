@@ -67,6 +67,11 @@ function executeTrade(side, entryPrice) {
         localStorage.setItem('investmentBalance', currentBalance.toFixed(2));
         
         let history = JSON.parse(localStorage.getItem('trade_history')) || [];
+        
+        // FIX: Store the absolute profit to avoid "+-" in the UI
+        const isWin = finalProfit >= 0;
+        const absProfit = Math.abs(finalProfit).toFixed(2); 
+        
         history.unshift({
             side: side,
             entryPrice: entryPrice.toFixed(2),
@@ -75,8 +80,8 @@ function executeTrade(side, entryPrice) {
             closeTime: new Date().toLocaleTimeString(),
             date: tradeDate,
             rawDate: new Date().toISOString(),
-            profit: finalProfit.toFixed(2),
-            isWin: finalProfit >= 0 // Determines Red/Green status
+            profit: absProfit, 
+            isWin: isWin
         });
         
         localStorage.setItem('trade_history', JSON.stringify(history.slice(0, 100)));
