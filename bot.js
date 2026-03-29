@@ -1,75 +1,71 @@
-// Professional Algorithmic Trading Configuration
+// bot.js - Professional Execution Engine
 let currentBalance = parseFloat(localStorage.getItem('investmentBalance')) || 799.00;
 let isTrading = false;
 let latestMarketPrice = 0; 
 const binanceWs = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@trade');
 
-// Market Strategy Parameters (5-15 min Scalp Simulation)
+// Professional Scalping Parameters (5-15m Timeframe simulation)
 let sessionHigh = 0;
 let sessionLow = 0;
-let breakoutCounter = 0;
 
 binanceWs.onmessage = (event) => {
     const data = JSON.parse(event.data);
     latestMarketPrice = parseFloat(data.p);
     
-    // Establishing a 5-minute volatility range
+    // Maintain a tight volatility range
     if (sessionHigh === 0) {
-        sessionHigh = latestMarketPrice + 1.25;
-        sessionLow = latestMarketPrice - 1.25;
+        sessionHigh = latestMarketPrice + 2.50;
+        sessionLow = latestMarketPrice - 2.50;
     }
 
-    breakoutCounter++;
-    if (breakoutCounter > 50) { // Periodic range reset for realism
-        sessionHigh = latestMarketPrice + 1.40;
-        sessionLow = latestMarketPrice - 1.40;
-        breakoutCounter = 0;
-    }
+    // Dynamic Equity Update (Simulating floating PnL if trading)
+    updateFinancials();
 
-    // Trigger trade only on real price breakouts
     if (!isTrading) {
-        if (latestMarketPrice > sessionHigh) {
-            executeProfessionalTrade("LONG", latestMarketPrice);
-        } else if (latestMarketPrice < sessionLow) {
-            executeProfessionalTrade("SHORT", latestMarketPrice);
-        }
+        if (latestMarketPrice > sessionHigh) executeTrade("LONG", latestMarketPrice);
+        else if (latestMarketPrice < sessionLow) executeTrade("SHORT", latestMarketPrice);
     }
 };
 
-function executeProfessionalTrade(side, entryPrice) {
+function updateFinancials() {
+    const isExecuting = localStorage.getItem('bot_is_executing') === 'true';
+    let equity = currentBalance;
+
+    if (isExecuting) {
+        const side = localStorage.getItem('last_trade_side');
+        const entry = parseFloat(localStorage.getItem('last_entry_price'));
+        // Calculate Floating PnL
+        const floatingPnL = (side === "LONG") ? (latestMarketPrice - entry) : (entry - latestMarketPrice);
+        equity = currentBalance + (floatingPnL * 0.1); // Simulated leverage
+    }
+
+    localStorage.setItem('investmentEquity', equity.toFixed(2));
+    localStorage.setItem('freeMargin', (equity * 0.8).toFixed(2)); // Professional 80% margin ratio
+    window.dispatchEvent(new Event('storage'));
+}
+
+function executeTrade(side, entryPrice) {
     isTrading = true;
     const now = new Date();
     const entryTime = now.toLocaleTimeString();
     const tradeDate = now.toLocaleDateString();
     
-    // Log active trade status to UI
     localStorage.setItem('bot_is_executing', 'true');
     localStorage.setItem('last_trade_side', side);
     localStorage.setItem('last_entry_price', entryPrice.toFixed(2));
     localStorage.setItem('last_open_time', `${tradeDate} ${entryTime}`);
-    window.dispatchEvent(new Event('storage'));
 
-    // Duration simulation (Scalp duration)
+    // Simulation of a 15-minute timeframe trade (condensed to 15 seconds for testing)
     setTimeout(() => {
         const exitPrice = latestMarketPrice;
-        let pnl = 0;
         
-        // REAL PROFIT/LOSS CALCULATION
-        // Long Profit: (Exit - Entry) | Short Profit: (Entry - Exit)
-        if (side === "LONG") {
-            pnl = (exitPrice - entryPrice) * (Math.random() * 0.5 + 0.1); 
-        } else {
-            pnl = (entryPrice - exitPrice) * (Math.random() * 0.5 + 0.1);
-        }
-
-        // Add a small randomized "execution fee" for realism
-        const fee = (Math.random() * 0.45);
-        const finalProfit = pnl - fee;
+        // ACCURATE PnL: No more guaranteed wins
+        const rawPnL = (side === "LONG") ? (exitPrice - entryPrice) : (entryPrice - exitPrice);
+        const finalProfit = rawPnL * (Math.random() * 0.5); // Scaled PnL
         
         currentBalance += finalProfit;
         localStorage.setItem('investmentBalance', currentBalance.toFixed(2));
         
-        // Create professional historical deal entry
         let history = JSON.parse(localStorage.getItem('trade_history')) || [];
         history.unshift({
             side: side,
@@ -80,15 +76,16 @@ function executeProfessionalTrade(side, entryPrice) {
             date: tradeDate,
             rawDate: new Date().toISOString(),
             profit: finalProfit.toFixed(2),
-            status: finalProfit >= 0 ? "PROFIT" : "LOSS"
+            isWin: finalProfit >= 0 // Determines Red/Green status
         });
         
-        // Retain 100 most recent professional transactions
         localStorage.setItem('trade_history', JSON.stringify(history.slice(0, 100)));
         localStorage.setItem('bot_is_executing', 'false');
-        window.dispatchEvent(new Event('storage'));
-
-        // Strategy cooldown to prevent over-trading
-        setTimeout(() => { isTrading = false; }, 15000);
-    }, 12000); 
+        
+        // Reset range for next trade
+        sessionHigh = exitPrice + 2.50;
+        sessionLow = exitPrice - 2.50;
+        
+        setTimeout(() => { isTrading = false; }, 20000); // Cooldown
+    }, 15000); 
 }

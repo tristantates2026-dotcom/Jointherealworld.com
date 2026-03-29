@@ -152,12 +152,13 @@
         </div>
 
         <div id="quant-view">
-            <div class="statement-header">
-                <div>
-                    <div style="font-size: 0.65rem; color: var(--text-grey); text-transform: uppercase; letter-spacing: 1px; font-weight: 800;">Institutional Net Equity</div>
-                    <div id="balance-display" style="font-size: 2.2rem; font-weight: 900; letter-spacing: -1px;">$0.00</div>
-                </div>
-                <div class="history-trigger" onclick="openStatement()">
+            <div class="statement-header" style="flex-direction: column; align-items: flex-start; gap: 15px;">
+                <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-grey); text-transform: uppercase; letter-spacing: 2px; font-weight: 800;">Investment Balance</div>
+                        <div id="balance-display" style="font-size: 1.8rem; font-weight: 900; letter-spacing: -1px;">$0.00</div>
+                    </div>
+                    <div class="history-trigger" onclick="openStatement()">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="3" y="6" width="18" height="15" rx="2" stroke="white" stroke-width="2"/>
                         <path d="M3 10H21" stroke="white" stroke-width="2"/>
@@ -168,27 +169,39 @@
                         <circle cx="17.5" cy="17" r="1" fill="white"/>
                         <path d="M8 4V7" stroke="white" stroke-width="2" stroke-linecap="round"/>
                         <path d="M16 4V7" stroke="white" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 90px; width: 100%; padding-top: 30px; border-top: 1px solid var(--border);">
+                    <div>
+                        <div style="font-size: 0.7rem; color: var(--text-grey); text-transform: uppercase; letter-spacing: 2px; font-weight: 800;">Equity</div>
+                        <div id="equity-display" style="font-weight: bold; font-size: 1rem;">$0.00</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.7rem; color: var(--text-grey); text-transform: uppercase; letter-spacing: 1px; font-weight: 800;">Free Margin</div>
+                        <div id="margin-display" style="font-weight: bold; font-size: 1rem;">$0.00</div>
+                    </div>
                 </div>
             </div>
             
-            <div id="tradingview_widget" style="height: 140px; width: 100%; border-bottom: 1px solid var(--border);"></div>
-            <div id="execution-log" style="padding-top: 10px;"></div>
+            <div id="tradingview_widget" style="height: 100px; width: 100%; border-bottom: 1px solid var(--border);"></div>
+            <div id="execution-log" style="padding-top: 20px;"></div>
         </div>
     </main>
 
     <div id="statement-modal" class="modal-statement">
         <div class="header" style="position: sticky; top: 0; background: var(--bg-dark); border-bottom: 1px solid var(--border); z-index: 100;">
-            <div class="back-trigger" onclick="closeStatement()"><span>✕</span> Close Statement</div>
-            <div style="font-weight: bold;">Past Transactions</div>
+            <div class="back-trigger" onclick="closeStatement()"><span>✕</span> </div>
+            <div style="font-weight: bold;">
+            Transactions History</div>
             <div style="width: 40px;"></div>
         </div>
         <div class="filter-bar">
-            <div class="filter-btn active" onclick="filterHistory('all', this)">All</div>
-            <div class="filter-btn" onclick="filterHistory('today', this)">Today</div>
-            <div class="filter-btn" onclick="filterHistory('week', this)">7D</div>
-            <div class="filter-btn" onclick="filterHistory('month', this)">30D</div>
-            <input type="date" class="date-picker-input" onchange="filterHistory('custom', this)">
+            <div class="filter-btn active" onclick="filterHistory('all', this)">Today</div>
+            <div class="filter-btn" onclick="filterHistory('week', this)">last week</div>
+            <div class="filter-btn" onclick="filterHistory('month', this)">Last month</div>
+            <div class="filter-btn" onclick="filterHistory('month', this)">Last 3 months</div>
+            <input type ="date" class="date-picker-input" onchange="filterHistory('custom', this)">
         </div>
         <div id="statement-list"></div>
     </div>
@@ -260,55 +273,60 @@
             });
         }
 
-        /* --- UI REFRESH LOGIC --- */
+        // NEW REFRESH FUNCTION WITH RED/GREEN LOGIC AND EQUITY
         function refreshQuantUI() {
             const log = document.getElementById('execution-log');
-            const display = document.getElementById('balance-display');
-            const history = JSON.parse(localStorage.getItem('trade_history')) || [];
-            const isExecuting = localStorage.getItem('bot_is_executing') === 'true';
+            const balDisp = document.getElementById('balance-display');
+            const eqDisp = document.getElementById('equity-display');
+            const margDisp = document.getElementById('margin-display');
+            
+            const balance = localStorage.getItem('investmentBalance') || "0.00";
+            const equity = localStorage.getItem('investmentEquity') || balance;
+            const margin = localStorage.getItem('freeMargin') || "0.00";
 
-            const savedBal = localStorage.getItem('investmentBalance');
-            if (display && savedBal) display.innerText = "$" + parseFloat(savedBal).toLocaleString(undefined, {minimumFractionDigits: 2});
+            if (balDisp) balDisp.innerText = "$" + parseFloat(balance).toLocaleString();
+            if (eqDisp) eqDisp.innerText = "$" + parseFloat(equity).toLocaleString();
+            if (margDisp) margDisp.innerText = "$" + parseFloat(margin).toLocaleString();
 
             if (!log) return;
             log.innerHTML = ''; 
 
+            const history = JSON.parse(localStorage.getItem('trade_history')) || [];
+            const isExecuting = localStorage.getItem('bot_is_executing') === 'true';
+
+            // Active Trade UI
             if (isExecuting) {
                 const side = localStorage.getItem('last_trade_side');
                 const price = localStorage.getItem('last_entry_price');
-                const openTime = localStorage.getItem('last_open_time');
-                const isLong = side === 'LONG';
-                
-                const activeCard = document.createElement('div');
-                activeCard.className = 'exec-card';
-                activeCard.style.borderLeftColor = isLong ? 'var(--accent-green)' : 'var(--accent-red)';
-                activeCard.innerHTML = `
-                    <div class="exec-row">
-                        <span style="font-weight:bold;">BTC/USDT <span style="color:${isLong ? 'var(--accent-green)' : 'var(--accent-red)'}">${side}</span></span>
-                        <span style="color:orange; font-weight:bold; font-size:0.65rem;">● EXECUTING</span>
-                    </div>
-                    <div class="exec-row"><span class="exec-label">Entry Price</span><span style="font-weight:bold;">$${price}</span></div>
-                    <div class="exec-row"><span class="exec-label">Start Time</span><span>${openTime}</span></div>
-                `;
-                log.appendChild(activeCard);
+                const time = localStorage.getItem('last_open_time');
+                log.innerHTML += `
+                    <div class="exec-card" style="border-left-color: #f39c12">
+                        <div class="exec-row">
+                            <span style="font-weight:bold;">BTC/USDT <span style="color:white">${side}</span></span>
+                            <span style="color:#f39c12; font-weight:bold; font-size:0.65rem;">● ACTIVE ORDER</span>
+                        </div>
+                        <div class="exec-row"><span class="exec-label">Entry Price</span><span style="font-weight:bold;">$${price}</span></div>
+                        <div class="exec-row"><span class="exec-label">Time</span><span>${time}</span></div>
+                    </div>`;
             }
 
+            // Historical Trade UI (Red/Green Logic)
             history.slice(0, 10).forEach(trade => {
-                const isLong = trade.side === 'LONG';
+                const statusColor = trade.isWin ? 'var(--accent-green)' : 'var(--accent-red)';
                 const card = document.createElement('div');
                 card.className = 'exec-card';
-                card.style.borderLeftColor = isLong ? 'var(--accent-green)' : 'var(--accent-red)';
+                card.style.borderLeftColor = statusColor;
                 card.innerHTML = `
                     <div class="exec-row">
-                        <span style="font-weight:bold;">BTC/USDT <span style="color:${isLong ? 'var(--accent-green)' : 'var(--accent-red)'}">${trade.side}</span></span>
-                        <span style="color:var(--text-grey); font-weight:bold; font-size:0.65rem;">● CLOSED</span>
+                        <span style="font-weight:bold;">BTC/USDT <span style="${trade.isWin ? '' : 'color:var(--accent-red)'}">${trade.side}</span></span>
+                        <span style="color:var(--text-grey); font-weight:bold; font-size:0.65rem;">● SETTLED</span>
                     </div>
-                    <div class="exec-row"><span class="exec-label">Settlement</span><span style="font-weight:bold;">$${trade.entryPrice} → $${trade.exitPrice || trade.entryPrice}</span></div>
+                    <div class="exec-row"><span class="exec-label">Entry / Exit</span><span style="font-weight:bold;">$${trade.entryPrice} → $${trade.exitPrice}</span></div>
+                    <div class="exec-row"><span class="exec-label">Execution Time</span><span>${trade.openTime} - ${trade.closeTime}</span></div>
                     <div class="exec-row" style="margin-top:5px; border-top:1px solid #1a222d; padding-top:5px;">
-                        <span class="exec-label">Net Profit</span>
-                        <span class="profit-green">+$${trade.profit}</span>
-                    </div>
-                `;
+                        <span class="exec-label">Net PnL</span>
+                        <span style="color:${statusColor}; font-weight:bold; font-family:monospace;">${trade.isWin ? '+' : ''}$${trade.profit}</span>
+                    </div>`;
                 log.appendChild(card);
             });
         }
